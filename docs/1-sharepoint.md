@@ -4,7 +4,7 @@ Allt material ligger i fyra listor på **en** SharePoint-webbplats, till exempel
 Lärarna behöver redigeringsrätt (medlem) på webbplatsen. Eleverna behöver ingen behörighet alls: de hämtar glosorna via Power Automate-flödet.
 
 ```
-Bocker ──< Kapitel ──< Glosor >── (GlosaIDs) ── Gloslistor
+glosor_bocker ──< glosor_kapitel ──< glosor_glosor >── (GlosaIDs) ── glosor_gloslistor
   ID         BokID        BokID, KapitelID       "12;15;19;…"
 ```
 
@@ -24,22 +24,22 @@ Bocker ──< Kapitel ──< Glosor >── (GlosaIDs) ── Gloslistor
 3. Skapa kolumnerna via **Listinställningar → Skapa kolumn**. Då blir det interna namnet samma som namnet du skriver.
    Om du i stället använder *+ Lägg till kolumn* direkt i listvyn kan det interna namnet bli något annat.
 
-## Lista 1: `Bocker`
+## Lista 1: `glosor_bocker`
 
 | Kolumn | Typ | Obligatorisk | Kommentar |
 | --- | --- | --- | --- |
 | `Title` | (finns redan) | Ja | Bokens namn, t.ex. *Caminando 1* |
 | `Sprak` | En textrad | Ja | Språkkod: `es`, `de`, `fr`, `en`, `it`, `pt`, `la`, `fi` |
 
-## Lista 2: `Kapitel`
+## Lista 2: `glosor_kapitel`
 
 | Kolumn | Typ | Obligatorisk | Kommentar |
 | --- | --- | --- | --- |
 | `Title` | (finns redan) | Ja | Kapitlets namn, t.ex. *Kapitel 4* |
-| `BokID` | Tal, 0 decimaler | Ja | ID för boken i `Bocker` |
+| `BokID` | Tal, 0 decimaler | Ja | ID för boken i `glosor_bocker` |
 | `Ordning` | Tal, 0 decimaler | Nej | Sorteringsordning, sätts automatiskt av appen |
 
-## Lista 3: `Glosor`
+## Lista 3: `glosor_glosor`
 
 | Kolumn | Typ | Obligatorisk | Kommentar |
 | --- | --- | --- | --- |
@@ -55,7 +55,7 @@ Bocker ──< Kapitel ──< Glosor >── (GlosaIDs) ── Gloslistor
 **Indexera** `KapitelID`, `BokID` och `Sprak`. Det gör att filtren fungerar även när listan växer förbi 5 000 glosor:
 *Listinställningar → Indexerade kolumner → Skapa nytt index*, ett index per kolumn.
 
-## Lista 4: `Gloslistor`
+## Lista 4: `glosor_gloslistor`
 
 | Kolumn | Typ | Obligatorisk | Kommentar |
 | --- | --- | --- | --- |

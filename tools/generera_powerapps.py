@@ -7,6 +7,7 @@ Varje skärm skrivs i två varianter:
   powerapps/<skärm>.yaml           hela skärmen ("Screens:" ...), klistras in i trädvyn
   powerapps/kontroller/<skärm>.yaml bara kontrollerna, om du hellre klistrar in dem på en tom skärm
 """
+import re
 from pathlib import Path
 
 ROT = Path(__file__).resolve().parent.parent
@@ -1127,11 +1128,35 @@ def skarm_listor():
 # ---------- YAML-utskrift ----------
 
 
+# Namnen på SharePoint-listorna (datakällorna i Power Apps).
+# Formlerna ovan skrivs med de korta namnen till vänster. De byts ut mot namnen till höger
+# överallt utom inuti textsträngar ("...").
+DATAKALLOR = {
+    "Bocker": "glosor_bocker",
+    "Kapitel": "glosor_kapitel",
+    "Glosor": "glosor_glosor",
+    "Gloslistor": "glosor_gloslistor",
+}
+_STRANG = re.compile(r'"(?:[^"]|"")*"')
+_KALLA = re.compile(r"\b(" + "|".join(DATAKALLOR) + r")\b")
+
+
+def byt_datakallor(formel):
+    delar = []
+    pos = 0
+    for m in _STRANG.finditer(formel):
+        delar.append(_KALLA.sub(lambda x: DATAKALLOR[x.group(1)], formel[pos : m.start()]))
+        delar.append(m.group(0))
+        pos = m.end()
+    delar.append(_KALLA.sub(lambda x: DATAKALLOR[x.group(1)], formel[pos:]))
+    return "".join(delar)
+
+
 def varde(v):
     """Formel -> YAML-värde. Allt skrivs som Power Fx-formel (=...)."""
     if isinstance(v, (int, float)):
         return f"={v}"
-    return f"={v}"
+    return "=" + byt_datakallor(v)
 
 
 def skriv_varde(rader, nyckel, v, indrag):

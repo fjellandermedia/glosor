@@ -88,7 +88,7 @@ Screens:
           Properties:
             Items: |-
               =Sort(
-                  If(chkAllaListor.Value, Gloslistor, Filter(Gloslistor, LarareEpost = User().Email)),
+                  If(chkAllaListor.Value, glosor_gloslistor, Filter(glosor_gloslistor, LarareEpost = User().Email)),
                   ID,
                   SortOrder.Descending
               )
@@ -173,7 +173,7 @@ Screens:
                         If(
                             !IsBlank(Trim(idText.Value)) && IsBlank(LookUp(colValda, ID = Value(idText.Value))),
                             With(
-                                { g: LookUp(Glosor, ID = Value(idText.Value)) },
+                                { g: LookUp(glosor_glosor, ID = Value(idText.Value)) },
                                 If(!IsBlank(g.ID), Collect(colValda, { ID: g.ID, Title: g.Title, Svenska: g.Svenska, Genus: g.Genus, Sprak: g.Sprak }))
                             )
                         )
@@ -209,7 +209,7 @@ Screens:
                         If(
                             !IsBlank(Trim(idText.Value)) && IsBlank(LookUp(colValda, ID = Value(idText.Value))),
                             With(
-                                { g: LookUp(Glosor, ID = Value(idText.Value)) },
+                                { g: LookUp(glosor_glosor, ID = Value(idText.Value)) },
                                 If(!IsBlank(g.ID), Collect(colValda, { ID: g.ID, Title: g.Title, Svenska: g.Svenska, Genus: g.Genus, Sprak: g.Sprak }))
                             )
                         )
@@ -239,7 +239,7 @@ Screens:
                   Width: =90
                   Height: =40
                   OnSelect: |-
-                    =Patch(Gloslistor, ThisItem, { Aktiv: !ThisItem.Aktiv })
+                    =Patch(glosor_gloslistor, ThisItem, { Aktiv: !ThisItem.Aktiv })
                   Fill: =RGBA(255, 255, 255, 1)
                   Color: =RGBA(47, 91, 211, 1)
                   HoverFill: =RGBA(231, 237, 252, 1)
@@ -266,7 +266,7 @@ Screens:
                   OnSelect: |-
                     =If(
                         varTaBortID = ThisItem.ID,
-                        Remove(Gloslistor, ThisItem);
+                        Remove(glosor_gloslistor, ThisItem);
                         Set(varTaBortID, 0),
                         Set(varTaBortID, ThisItem.ID)
                     )

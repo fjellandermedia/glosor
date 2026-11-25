@@ -53,7 +53,7 @@
 - cmbLBok:
     Control: Classic/ComboBox@2.4.0
     Properties:
-      Items: =Sort(Bocker, Title)
+      Items: =Sort(glosor_bocker, Title)
       DisplayFields: =["Title"]
       SearchFields: =["Title"]
       SelectMultiple: =false
@@ -67,7 +67,7 @@
 - cmbLKapitel:
     Control: Classic/ComboBox@2.4.0
     Properties:
-      Items: =Sort(Filter(Kapitel, BokID = Coalesce(cmbLBok.Selected.ID, -1)), Ordning)
+      Items: =Sort(Filter(glosor_kapitel, BokID = Coalesce(cmbLBok.Selected.ID, -1)), Ordning)
       DisplayFields: =["Title"]
       SearchFields: =["Title"]
       SelectMultiple: =false
@@ -153,8 +153,8 @@
       Items: |-
         =If(
             chkFristaende.Value,
-            Filter(Glosor, BokID = 0, Sprak = cmbLSprak.Selected.Kod),
-            Filter(Glosor, KapitelID = Coalesce(cmbLKapitel.Selected.ID, -1))
+            Filter(glosor_glosor, BokID = 0, Sprak = cmbLSprak.Selected.Kod),
+            Filter(glosor_glosor, KapitelID = Coalesce(cmbLKapitel.Selected.ID, -1))
         )
       X: =20
       Y: =240
@@ -225,7 +225,7 @@
 - cmbListor:
     Control: Classic/ComboBox@2.4.0
     Properties:
-      Items: =Sort(Gloslistor, Title)
+      Items: =Sort(glosor_gloslistor, Title)
       DisplayFields: =["Title"]
       SearchFields: =["Title"]
       SelectMultiple: =true
@@ -250,7 +250,7 @@
                 If(
                     !IsBlank(Trim(idText.Value)) && IsBlank(LookUp(colValda, ID = Value(idText.Value))),
                     With(
-                        { g: LookUp(Glosor, ID = Value(idText.Value)) },
+                        { g: LookUp(glosor_glosor, ID = Value(idText.Value)) },
                         If(!IsBlank(g.ID), Collect(colValda, { ID: g.ID, Title: g.Title, Svenska: g.Svenska, Genus: g.Genus, Sprak: g.Sprak }))
                     )
                 )
@@ -435,8 +435,8 @@
             Set(
                 varSparadLista,
                 Patch(
-                    Gloslistor,
-                    Defaults(Gloslistor),
+                    glosor_gloslistor,
+                    Defaults(glosor_gloslistor),
                     {
                         Title: Trim(txtListNamn.Text),
                         Beskrivning: txtListBeskr.Text,
@@ -451,8 +451,8 @@
             Set(
                 varSparadLista,
                 Patch(
-                    Gloslistor,
-                    LookUp(Gloslistor, ID = varRedigeraLista.ID),
+                    glosor_gloslistor,
+                    LookUp(glosor_gloslistor, ID = varRedigeraLista.ID),
                     {
                         Title: Trim(txtListNamn.Text),
                         Beskrivning: txtListBeskr.Text,
@@ -463,10 +463,10 @@
             )
         );
         If(
-            IsEmpty(Errors(Gloslistor)),
+            IsEmpty(Errors(glosor_gloslistor)),
             Set(varRedigeraLista, varSparadLista);
             Notify("Gloslistan sparades. Kopiera länken och dela med eleverna.", NotificationType.Success),
-            Notify("Något gick fel: " & First(Errors(Gloslistor)).Message, NotificationType.Error)
+            Notify("Något gick fel: " & First(Errors(glosor_gloslistor)).Message, NotificationType.Error)
         )
       Fill: =RGBA(47, 91, 211, 1)
       Color: =RGBA(255, 255, 255, 1)

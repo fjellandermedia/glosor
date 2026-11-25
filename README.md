@@ -6,8 +6,8 @@ Glosträning med matchning, skrivövningar, adaptiv repetition och spaced repeti
  Lärare                                                     Elever
  ┌──────────────────┐   ┌─────────────────────┐   ┌─────────────────────┐   ┌──────────────────────┐
  │ Power Apps       │──▶│ SharePoint-listor   │◀──│ Power Automate-flöde │◀──│ Webbsida (det här    │
- │ (lägger in och   │   │ Bocker, Kapitel,    │   │ "När en HTTP-begäran │   │ repot, GitHub Pages) │
- │ delar glosor)    │   │ Glosor, Gloslistor  │   │ tas emot" → JSON     │   │ statistik i webbläs. │
+ │ (lägger in och   │   │ glosor_bocker, …    │   │ "När en HTTP-begäran │   │ repot, GitHub Pages) │
+ │ delar glosor)    │   │ glosor_gloslistor   │   │ tas emot" → JSON     │   │ statistik i webbläs. │
  └──────────────────┘   └─────────────────────┘   └─────────────────────┘   └──────────────────────┘
 ```
 

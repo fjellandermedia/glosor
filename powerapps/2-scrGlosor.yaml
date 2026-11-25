@@ -69,7 +69,7 @@ Screens:
       - cmbBok:
           Control: Classic/ComboBox@2.4.0
           Properties:
-            Items: =Sort(Bocker, Title)
+            Items: =Sort(glosor_bocker, Title)
             DisplayFields: =["Title"]
             SearchFields: =["Title"]
             SelectMultiple: =false
@@ -78,7 +78,7 @@ Screens:
             Y: =104
             Width: =400
             Height: =40
-            DefaultSelectedItems: =Filter(Bocker, ID = varBokID)
+            DefaultSelectedItems: =Filter(glosor_bocker, ID = varBokID)
             OnChange: |-
               =Set(varKapitelID, 0);
               Reset(cmbKapitel)
@@ -122,7 +122,7 @@ Screens:
                   !IsBlank(Trim(txtNyBok.Text)) && !IsBlank(cmbNyBokSprak.Selected.Kod),
                   Set(
                       varBokID,
-                      Patch(Bocker, Defaults(Bocker), { Title: Trim(txtNyBok.Text), Sprak: cmbNyBokSprak.Selected.Kod }).ID
+                      Patch(glosor_bocker, Defaults(glosor_bocker), { Title: Trim(txtNyBok.Text), Sprak: cmbNyBokSprak.Selected.Kod }).ID
                   );
                   Set(varKapitelID, 0);
                   Reset(txtNyBok);
@@ -170,7 +170,7 @@ Screens:
       - cmbKapitel:
           Control: Classic/ComboBox@2.4.0
           Properties:
-            Items: =Sort(Filter(Kapitel, BokID = Coalesce(cmbBok.Selected.ID, -1)), Ordning)
+            Items: =Sort(Filter(glosor_kapitel, BokID = Coalesce(cmbBok.Selected.ID, -1)), Ordning)
             DisplayFields: =["Title"]
             SearchFields: =["Title"]
             SelectMultiple: =false
@@ -179,7 +179,7 @@ Screens:
             Y: =250
             Width: =400
             Height: =40
-            DefaultSelectedItems: =Filter(Kapitel, ID = varKapitelID)
+            DefaultSelectedItems: =Filter(glosor_kapitel, ID = varKapitelID)
             DisplayMode: =If(IsBlank(cmbBok.Selected.ID), DisplayMode.Disabled, DisplayMode.Edit)
       - txtNyttKapitel:
           Control: Classic/TextInput@2.3.2
@@ -211,13 +211,13 @@ Screens:
                   Set(
                       varKapitelID,
                       Patch(
-                          Kapitel,
-                          Defaults(Kapitel),
+                          glosor_kapitel,
+                          Defaults(glosor_kapitel),
                           {
                               Title: Trim(txtNyttKapitel.Text),
                               BokID: cmbBok.Selected.ID,
                               Ordning: Coalesce(
-                                  First(Sort(Filter(Kapitel, BokID = cmbBok.Selected.ID), Ordning, SortOrder.Descending)).Ordning,
+                                  First(Sort(Filter(glosor_kapitel, BokID = cmbBok.Selected.ID), Ordning, SortOrder.Descending)).Ordning,
                                   0
                               ) + 1
                           }
@@ -645,7 +645,7 @@ Screens:
                       antal: CountRows(colImport)
                   },
                   Collect(
-                      Glosor,
+                      glosor_glosor,
                       ForAll(
                           colImport As r,
                           {
@@ -661,10 +661,10 @@ Screens:
                       )
                   );
                   If(
-                      IsEmpty(Errors(Glosor)),
+                      IsEmpty(Errors(glosor_glosor)),
                       Notify(antal & " glosor sparades.", NotificationType.Success);
                       Clear(colImport),
-                      Notify("Något gick fel: " & First(Errors(Glosor)).Message, NotificationType.Error)
+                      Notify("Något gick fel: " & First(Errors(glosor_glosor)).Message, NotificationType.Error)
                   )
               )
             Fill: =RGBA(47, 91, 211, 1)
@@ -709,10 +709,10 @@ Screens:
             Items: |-
               =If(
                   !IsBlank(cmbKapitel.Selected.ID),
-                  Filter(Glosor, KapitelID = cmbKapitel.Selected.ID),
+                  Filter(glosor_glosor, KapitelID = cmbKapitel.Selected.ID),
                   IsBlank(cmbBok.Selected.ID) && !IsBlank(cmbSprak.Selected.Kod),
-                  Filter(Glosor, BokID = 0, Sprak = cmbSprak.Selected.Kod),
-                  Filter(Glosor, ID = -1)
+                  Filter(glosor_glosor, BokID = 0, Sprak = cmbSprak.Selected.Kod),
+                  Filter(glosor_glosor, ID = -1)
               )
             X: =920
             Y: =130
@@ -743,7 +743,7 @@ Screens:
                   Color: =Switch(ThisItem.Genus, "f", RGBA(211, 47, 47, 1), "m", RGBA(31, 95, 209, 1), "n", RGBA(22, 138, 61, 1), RGBA(28, 35, 51, 1))
                   FontWeight: =FontWeight.Semibold
                   OnChange: |-
-                    =Patch(Glosor, ThisItem, { Title: Trim(Self.Text) })
+                    =Patch(glosor_glosor, ThisItem, { Title: Trim(Self.Text) })
                   BorderThickness: =0
             - txtBefSv:
                 Control: Classic/TextInput@2.3.2
@@ -761,7 +761,7 @@ Screens:
                   RadiusBottomLeft: =6
                   RadiusBottomRight: =6
                   OnChange: |-
-                    =Patch(Glosor, ThisItem, { Svenska: Trim(Self.Text) })
+                    =Patch(glosor_glosor, ThisItem, { Svenska: Trim(Self.Text) })
                   BorderThickness: =0
             - btnBefGenus:
                 Control: Classic/Button@2.2.0
@@ -772,7 +772,7 @@ Screens:
                   Width: =70
                   Height: =32
                   OnSelect: |-
-                    =Patch(Glosor, ThisItem, { Genus: Switch(ThisItem.Genus, "m", "f", "f", "n", "n", "", "m") })
+                    =Patch(glosor_glosor, ThisItem, { Genus: Switch(ThisItem.Genus, "m", "f", "f", "n", "n", "", "m") })
                   Fill: =Switch(ThisItem.Genus, "f", RGBA(211, 47, 47, 1), "m", RGBA(31, 95, 209, 1), "n", RGBA(22, 138, 61, 1), RGBA(230, 233, 240, 1))
                   Color: =If(IsBlank(ThisItem.Genus), RGBA(91, 101, 120, 1), RGBA(255, 255, 255, 1))
                   HoverFill: =ColorFade(Self.Fill, -15%)
@@ -794,7 +794,7 @@ Screens:
                   Y: =6
                   Width: =32
                   Height: =32
-                  OnSelect: =Remove(Glosor, ThisItem)
+                  OnSelect: =Remove(glosor_glosor, ThisItem)
                   Fill: =RGBA(255, 255, 255, 1)
                   Color: =RGBA(198, 40, 40, 1)
                   HoverFill: =RGBA(231, 237, 252, 1)

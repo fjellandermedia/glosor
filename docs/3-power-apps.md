@@ -12,7 +12,8 @@ Appen är en arbetsyteapp (canvas app) med fyra skärmar:
 ## Steg för steg
 
 1. **Skapa appen.** *make.powerapps.com → Skapa → Tom app → Tom arbetsyteapp*, format **Surfplatta**.
-2. **Lägg till data.** *Data → Lägg till data → SharePoint →* din webbplats → bocka för `Bocker`, `Kapitel`, `Glosor` och `Gloslistor`.
+2. **Lägg till data.** *Data → Lägg till data → SharePoint →* din webbplats → bocka för `glosor_bocker`, `glosor_kapitel`, `glosor_glosor` och `glosor_gloslistor`.
+   Heter listorna något annat hos er, ändra `DATAKALLOR` överst i utskriftsdelen av [`tools/generera_powerapps.py`](../tools/generera_powerapps.py) och generera om filerna.
    Gör detta **innan** du klistrar in skärmarna, annars blir formlerna röda.
 3. **Named formulas.** Markera **App** i trädvyn, välj egenskapen **Formulas** och klistra in hela [`App.Formulas.txt`](../powerapps/App.Formulas.txt).
    Om Power Apps är på svenska, använd i stället [`App.Formulas.sv.txt`](../powerapps/App.Formulas.sv.txt) (semikolon mellan argument).

@@ -40,7 +40,7 @@ Byt namn på åtgärderna **exakt** som i fetstilen nedan (klicka på åtgärden
 #### Fall 1: Lika med `listor`
 
 1. **SharePoint → Hämta objekt** (*Get items*), namn: **Hamta_listor**
-   - Webbplats: din webbplats, Lista: `Gloslistor`
+   - Webbplats: din webbplats, Lista: `glosor_gloslistor`
    - Filterfråga: `Aktiv eq 1`
    - Högsta antal (Top count): `5000`
 2. **Dataåtgärd → Välj** (*Select*), namn: **Valj_listor**
@@ -64,7 +64,7 @@ Byt namn på åtgärderna **exakt** som i fetstilen nedan (klicka på åtgärden
 #### Fall 2: Lika med `glosor`
 
 1. **SharePoint → Hämta objekt**, namn: **Hamta_glosor**
-   - Lista: `Glosor`
+   - Lista: `glosor_glosor`
    - Högsta antal: `5000`
    - **Inställningar → Sidnumrering (Pagination): På**, tröskel `20000`. Då fungerar det även när ni har fler än 5 000 glosor.
 2. **Dataåtgärd → Filtrera matris** (*Filter array*), namn: **Filtrera_glosor**
