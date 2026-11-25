@@ -15,6 +15,7 @@ Appen är en arbetsyteapp (canvas app) med fyra skärmar:
 2. **Lägg till data.** *Data → Lägg till data → SharePoint →* din webbplats → bocka för `Bocker`, `Kapitel`, `Glosor` och `Gloslistor`.
    Gör detta **innan** du klistrar in skärmarna, annars blir formlerna röda.
 3. **Named formulas.** Markera **App** i trädvyn, välj egenskapen **Formulas** och klistra in hela [`App.Formulas.txt`](../powerapps/App.Formulas.txt).
+   Om Power Apps är på svenska, använd i stället [`App.Formulas.sv.txt`](../powerapps/App.Formulas.sv.txt) (semikolon mellan argument).
    Ändra `WebbAdress` om elevsidan inte ligger på `https://fjellandermedia.github.io/glosor/`.
 4. **Klistra in skärmarna.** Öppna en YAML-fil på GitHub och klicka på kopieraknappen ("Copy raw file"). I Power Apps Studio:
    högerklicka i **trädvyn** → **Klistra in** → **Klistra in kod** (*Paste code*). Gör så för alla fyra filerna, i ordning.
@@ -34,7 +35,7 @@ Vissa versioner av Studio tar bara emot kontroller, inte hela skärmar. Gör då
 
 YAML-koden använder engelsk formelsyntax (`,` mellan argument och `;` mellan formler). Studio översätter den när du klistrar in.
 Om Power Apps är på svenska skriver du formler för hand med `;` mellan argument och `;;` mellan formler.
-Det gäller också `App.Formulas`: byt `,` mot `;` och `;` mot `;;` om Studio inte godtar texten.
+För `App.Formulas` finns en färdig svensk version: [`App.Formulas.sv.txt`](../powerapps/App.Formulas.sv.txt).
 Det enklaste är att tillfälligt byta Power Apps till engelska (kugghjulet → Språk) medan du bygger.
 
 ## Så fungerar det för lärarna
