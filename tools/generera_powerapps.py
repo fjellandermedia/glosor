@@ -206,10 +206,6 @@ def skarm_start():
                 VIT,
                 BorderColor=LINJE,
                 BorderThickness=1,
-                RadiusTopLeft=12,
-                RadiusTopRight=12,
-                RadiusBottomLeft=12,
-                RadiusBottomRight=12,
             ),
             label(f"lblStart{n}Rubrik", titel, f"{x} + 24", 190, f"{w} - 48", 40, Size=18, FontWeight="FontWeight.Bold"),
             label(
