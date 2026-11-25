@@ -1,0 +1,294 @@
+Screens:
+  scrListor:
+    Properties:
+      Fill: =RGBA(244, 246, 251, 1)
+      OnVisible: =Set(varTaBortID, 0)
+    Children:
+      - rectLisHuvud:
+          Control: Rectangle@2.3.0
+          Properties:
+            X: =0
+            Y: =0
+            Width: =Parent.Width
+            Height: =64
+            Fill: =RGBA(47, 91, 211, 1)
+      - lblLisTitel:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="Gloslistor"
+            X: =24
+            Y: =0
+            Width: =800
+            Height: =64
+            Color: =RGBA(255, 255, 255, 1)
+            Size: =20
+            FontWeight: =FontWeight.Bold
+      - btnLisHem:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: ="⌂ Start"
+            X: =Parent.Width - 150
+            Y: =12
+            Width: =130
+            Height: =40
+            OnSelect: =Navigate(scrStart, ScreenTransition.None)
+            Fill: =RGBA(255, 255, 255, 1)
+            Color: =RGBA(47, 91, 211, 1)
+            HoverFill: =RGBA(231, 237, 252, 1)
+            HoverColor: =RGBA(47, 91, 211, 1)
+            PressedFill: =RGBA(231, 237, 252, 1)
+            BorderColor: =RGBA(47, 91, 211, 1)
+            BorderThickness: =2
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            Size: =12
+            FontWeight: =FontWeight.Semibold
+      - chkAllaListor:
+          Control: Classic/CheckBox@2.1.0
+          Properties:
+            Text: ="Visa alla lärares listor"
+            X: =20
+            Y: =76
+            Width: =320
+            Height: =36
+            Size: =12
+            Color: =RGBA(28, 35, 51, 1)
+            CheckboxBorderColor: =RGBA(47, 91, 211, 1)
+      - btnLisNy:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: ="+ Ny gloslista"
+            X: =Parent.Width - 200
+            Y: =74
+            Width: =180
+            Height: =40
+            OnSelect: |-
+              =Set(varRedigeraLista, Blank());
+              Set(varMallNamn, "");
+              Clear(colValda);
+              Navigate(scrNyLista, ScreenTransition.None)
+            Fill: =RGBA(47, 91, 211, 1)
+            Color: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(Self.Fill, -15%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            PressedFill: =ColorFade(Self.Fill, -25%)
+            BorderColor: =RGBA(47, 91, 211, 1)
+            BorderThickness: =2
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            Size: =12
+            FontWeight: =FontWeight.Semibold
+      - galListor:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            Items: |-
+              =Sort(
+                  If(chkAllaListor.Value, Gloslistor, Filter(Gloslistor, LarareEpost = User().Email)),
+                  ID,
+                  SortOrder.Descending
+              )
+            X: =20
+            Y: =124
+            Width: =Parent.Width - 40
+            Height: =Parent.Height - 144
+            TemplateSize: =92
+            TemplatePadding: =0
+            Fill: =RGBA(255, 255, 255, 1)
+            BorderColor: =RGBA(221, 226, 236, 1)
+            BorderThickness: =1
+            ShowScrollbar: =true
+          Children:
+            - lblLTitel:
+                Control: Label@2.5.1
+                Properties:
+                  Text: =ThisItem.Title
+                  X: =20
+                  Y: =10
+                  Width: =Parent.TemplateWidth - 720
+                  Height: =30
+                  Color: =If(ThisItem.Aktiv, RGBA(28, 35, 51, 1), RGBA(91, 101, 120, 1))
+                  Size: =14
+                  FontWeight: =FontWeight.Bold
+            - lblLMeta:
+                Control: Label@2.5.1
+                Properties:
+                  Text: =ThisItem.LarareNamn & " · " & CountRows(Filter(Split(ThisItem.GlosaIDs, ";"), !IsBlank(Trim(Value)))) & " glosor · " & Coalesce(LookUp(Sprakval, Kod = ThisItem.Sprak).Namn, ThisItem.Sprak) & If(ThisItem.Aktiv, "", " · DOLD för eleverna") & If(IsBlank(ThisItem.Beskrivning), "", " · " & ThisItem.Beskrivning)
+                  X: =20
+                  Y: =40
+                  Width: =Parent.TemplateWidth - 720
+                  Height: =24
+                  Color: =RGBA(91, 101, 120, 1)
+                  Size: =11
+            - lblLLank:
+                Control: Label@2.5.1
+                Properties:
+                  Text: =WebbAdress & "?lista=" & ThisItem.ID
+                  X: =20
+                  Y: =64
+                  Width: =Parent.TemplateWidth - 720
+                  Height: =22
+                  Color: =RGBA(47, 91, 211, 1)
+                  Size: =10
+            - btnLKopiera:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: ="Kopiera länk"
+                  X: =Parent.TemplateWidth - 690
+                  Y: =24
+                  Width: =125
+                  Height: =40
+                  OnSelect: |-
+                    =Copy(WebbAdress & "?lista=" & ThisItem.ID);
+                    Notify("Länken är kopierad.", NotificationType.Success)
+                  Fill: =RGBA(255, 255, 255, 1)
+                  Color: =RGBA(47, 91, 211, 1)
+                  HoverFill: =RGBA(231, 237, 252, 1)
+                  HoverColor: =RGBA(47, 91, 211, 1)
+                  PressedFill: =RGBA(231, 237, 252, 1)
+                  BorderColor: =RGBA(47, 91, 211, 1)
+                  BorderThickness: =2
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  Size: =10
+                  FontWeight: =FontWeight.Semibold
+            - btnLRedigera:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: ="Redigera"
+                  X: =Parent.TemplateWidth - 555
+                  Y: =24
+                  Width: =105
+                  Height: =40
+                  OnSelect: |-
+                    =Clear(colValda);
+                    ForAll(
+                        Split(ThisItem.GlosaIDs, ";") As idText,
+                        If(
+                            !IsBlank(Trim(idText.Value)) && IsBlank(LookUp(colValda, ID = Value(idText.Value))),
+                            With(
+                                { g: LookUp(Glosor, ID = Value(idText.Value)) },
+                                If(!IsBlank(g.ID), Collect(colValda, { ID: g.ID, Title: g.Title, Svenska: g.Svenska, Genus: g.Genus, Sprak: g.Sprak }))
+                            )
+                        )
+                    );
+                    Set(varRedigeraLista, ThisItem);
+                    Navigate(scrNyLista, ScreenTransition.None)
+                  Fill: =RGBA(255, 255, 255, 1)
+                  Color: =RGBA(47, 91, 211, 1)
+                  HoverFill: =RGBA(231, 237, 252, 1)
+                  HoverColor: =RGBA(47, 91, 211, 1)
+                  PressedFill: =RGBA(231, 237, 252, 1)
+                  BorderColor: =RGBA(47, 91, 211, 1)
+                  BorderThickness: =2
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  Size: =10
+                  FontWeight: =FontWeight.Semibold
+                  Visible: =ThisItem.LarareEpost = User().Email
+            - btnLMall:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: ="Använd som mall"
+                  X: =Parent.TemplateWidth - 440
+                  Y: =24
+                  Width: =140
+                  Height: =40
+                  OnSelect: |-
+                    =Clear(colValda);
+                    ForAll(
+                        Split(ThisItem.GlosaIDs, ";") As idText,
+                        If(
+                            !IsBlank(Trim(idText.Value)) && IsBlank(LookUp(colValda, ID = Value(idText.Value))),
+                            With(
+                                { g: LookUp(Glosor, ID = Value(idText.Value)) },
+                                If(!IsBlank(g.ID), Collect(colValda, { ID: g.ID, Title: g.Title, Svenska: g.Svenska, Genus: g.Genus, Sprak: g.Sprak }))
+                            )
+                        )
+                    );
+                    Set(varRedigeraLista, Blank());
+                    Set(varMallNamn, "Kopia av " & ThisItem.Title);
+                    Navigate(scrNyLista, ScreenTransition.None)
+                  Fill: =RGBA(255, 255, 255, 1)
+                  Color: =RGBA(47, 91, 211, 1)
+                  HoverFill: =RGBA(231, 237, 252, 1)
+                  HoverColor: =RGBA(47, 91, 211, 1)
+                  PressedFill: =RGBA(231, 237, 252, 1)
+                  BorderColor: =RGBA(47, 91, 211, 1)
+                  BorderThickness: =2
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  Size: =10
+                  FontWeight: =FontWeight.Semibold
+            - btnLAktiv:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: =If(ThisItem.Aktiv, "Dölj", "Visa")
+                  X: =Parent.TemplateWidth - 290
+                  Y: =24
+                  Width: =90
+                  Height: =40
+                  OnSelect: |-
+                    =Patch(Gloslistor, ThisItem, { Aktiv: !ThisItem.Aktiv })
+                  Fill: =RGBA(255, 255, 255, 1)
+                  Color: =RGBA(47, 91, 211, 1)
+                  HoverFill: =RGBA(231, 237, 252, 1)
+                  HoverColor: =RGBA(47, 91, 211, 1)
+                  PressedFill: =RGBA(231, 237, 252, 1)
+                  BorderColor: =RGBA(47, 91, 211, 1)
+                  BorderThickness: =2
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  Size: =10
+                  FontWeight: =FontWeight.Semibold
+                  Visible: =ThisItem.LarareEpost = User().Email
+                  Tooltip: ="Dolda listor syns inte för eleverna"
+            - btnLTaBort:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  Text: =If(varTaBortID = ThisItem.ID, "Bekräfta!", "Ta bort")
+                  X: =Parent.TemplateWidth - 190
+                  Y: =24
+                  Width: =170
+                  Height: =40
+                  OnSelect: |-
+                    =If(
+                        varTaBortID = ThisItem.ID,
+                        Remove(Gloslistor, ThisItem);
+                        Set(varTaBortID, 0),
+                        Set(varTaBortID, ThisItem.ID)
+                    )
+                  Fill: =RGBA(255, 255, 255, 1)
+                  Color: =RGBA(198, 40, 40, 1)
+                  HoverFill: =RGBA(231, 237, 252, 1)
+                  HoverColor: =RGBA(198, 40, 40, 1)
+                  PressedFill: =RGBA(231, 237, 252, 1)
+                  BorderColor: =RGBA(198, 40, 40, 1)
+                  BorderThickness: =2
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  Size: =10
+                  FontWeight: =FontWeight.Semibold
+                  Visible: =ThisItem.LarareEpost = User().Email
+            - rectLLinje:
+                Control: Rectangle@2.3.0
+                Properties:
+                  X: =0
+                  Y: =Parent.TemplateHeight - 1
+                  Width: =Parent.TemplateWidth
+                  Height: =1
+                  Fill: =RGBA(221, 226, 236, 1)

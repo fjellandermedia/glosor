@@ -1,0 +1,815 @@
+- rectGlosHuvud:
+    Control: Rectangle@2.3.0
+    Properties:
+      X: =0
+      Y: =0
+      Width: =Parent.Width
+      Height: =64
+      Fill: =RGBA(47, 91, 211, 1)
+- lblGlosTitel:
+    Control: Label@2.5.1
+    Properties:
+      Text: ="Lägg in glosor"
+      X: =24
+      Y: =0
+      Width: =800
+      Height: =64
+      Color: =RGBA(255, 255, 255, 1)
+      Size: =20
+      FontWeight: =FontWeight.Bold
+- btnGlosHem:
+    Control: Classic/Button@2.2.0
+    Properties:
+      Text: ="⌂ Start"
+      X: =Parent.Width - 150
+      Y: =12
+      Width: =130
+      Height: =40
+      OnSelect: =Navigate(scrStart, ScreenTransition.None)
+      Fill: =RGBA(255, 255, 255, 1)
+      Color: =RGBA(47, 91, 211, 1)
+      HoverFill: =RGBA(231, 237, 252, 1)
+      HoverColor: =RGBA(47, 91, 211, 1)
+      PressedFill: =RGBA(231, 237, 252, 1)
+      BorderColor: =RGBA(47, 91, 211, 1)
+      BorderThickness: =2
+      RadiusTopLeft: =8
+      RadiusTopRight: =8
+      RadiusBottomLeft: =8
+      RadiusBottomRight: =8
+      Size: =12
+      FontWeight: =FontWeight.Semibold
+- lblGlosSprak:
+    Control: Label@2.5.1
+    Properties:
+      Text: =If(IsBlank(cmbBok.Selected.ID), cmbSprak.Selected.Kod, cmbBok.Selected.Sprak)
+      X: =0
+      Y: =0
+      Width: =10
+      Height: =10
+      Color: =RGBA(28, 35, 51, 1)
+      Size: =12
+      Visible: =false
+- lblBok:
+    Control: Label@2.5.1
+    Properties:
+      Text: ="1. Bok"
+      X: =20
+      Y: =76
+      Width: =400
+      Height: =30
+      Color: =RGBA(28, 35, 51, 1)
+      Size: =13
+      FontWeight: =FontWeight.Semibold
+- cmbBok:
+    Control: Classic/ComboBox@2.4.0
+    Properties:
+      Items: =Sort(Bocker, Title)
+      DisplayFields: =["Title"]
+      SearchFields: =["Title"]
+      SelectMultiple: =false
+      InputTextPlaceholder: ="Välj bok – lämna tomt för fristående glosor"
+      X: =20
+      Y: =104
+      Width: =400
+      Height: =40
+      DefaultSelectedItems: =Filter(Bocker, ID = varBokID)
+      OnChange: |-
+        =Set(varKapitelID, 0);
+        Reset(cmbKapitel)
+- txtNyBok:
+    Control: Classic/TextInput@2.3.2
+    Properties:
+      Default: =""
+      HintText: ="Ny bok…"
+      X: =20
+      Y: =150
+      Width: =175
+      Height: =36
+      Size: =12
+      BorderColor: =RGBA(221, 226, 236, 1)
+      RadiusTopLeft: =6
+      RadiusTopRight: =6
+      RadiusBottomLeft: =6
+      RadiusBottomRight: =6
+- cmbNyBokSprak:
+    Control: Classic/ComboBox@2.4.0
+    Properties:
+      Items: =Sprakval
+      DisplayFields: =["Namn"]
+      SearchFields: =["Namn"]
+      SelectMultiple: =false
+      InputTextPlaceholder: ="Språk"
+      X: =200
+      Y: =150
+      Width: =120
+      Height: =36
+- btnNyBok:
+    Control: Classic/Button@2.2.0
+    Properties:
+      Text: ="Skapa bok"
+      X: =325
+      Y: =150
+      Width: =95
+      Height: =36
+      OnSelect: |-
+        =If(
+            !IsBlank(Trim(txtNyBok.Text)) && !IsBlank(cmbNyBokSprak.Selected.Kod),
+            Set(
+                varBokID,
+                Patch(Bocker, Defaults(Bocker), { Title: Trim(txtNyBok.Text), Sprak: cmbNyBokSprak.Selected.Kod }).ID
+            );
+            Set(varKapitelID, 0);
+            Reset(txtNyBok);
+            Reset(cmbNyBokSprak);
+            Reset(cmbBok);
+            Reset(cmbKapitel),
+            Notify("Skriv bokens namn och välj språk.", NotificationType.Warning)
+        )
+      Fill: =RGBA(255, 255, 255, 1)
+      Color: =RGBA(47, 91, 211, 1)
+      HoverFill: =RGBA(231, 237, 252, 1)
+      HoverColor: =RGBA(47, 91, 211, 1)
+      PressedFill: =RGBA(231, 237, 252, 1)
+      BorderColor: =RGBA(47, 91, 211, 1)
+      BorderThickness: =2
+      RadiusTopLeft: =8
+      RadiusTopRight: =8
+      RadiusBottomLeft: =8
+      RadiusBottomRight: =8
+      Size: =10
+      FontWeight: =FontWeight.Semibold
+- lblBokSprak:
+    Control: Label@2.5.1
+    Properties:
+      Text: |-
+        ="Språk: " & Coalesce(LookUp(Sprakval, Kod = cmbBok.Selected.Sprak).Namn, cmbBok.Selected.Sprak)
+      X: =20
+      Y: =190
+      Width: =400
+      Height: =26
+      Color: =RGBA(91, 101, 120, 1)
+      Size: =11
+      Visible: =!IsBlank(cmbBok.Selected.ID)
+- lblKapitel:
+    Control: Label@2.5.1
+    Properties:
+      Text: ="2. Kapitel"
+      X: =20
+      Y: =222
+      Width: =400
+      Height: =30
+      Color: =RGBA(28, 35, 51, 1)
+      Size: =13
+      FontWeight: =FontWeight.Semibold
+- cmbKapitel:
+    Control: Classic/ComboBox@2.4.0
+    Properties:
+      Items: =Sort(Filter(Kapitel, BokID = Coalesce(cmbBok.Selected.ID, -1)), Ordning)
+      DisplayFields: =["Title"]
+      SearchFields: =["Title"]
+      SelectMultiple: =false
+      InputTextPlaceholder: ="Välj kapitel"
+      X: =20
+      Y: =250
+      Width: =400
+      Height: =40
+      DefaultSelectedItems: =Filter(Kapitel, ID = varKapitelID)
+      DisplayMode: =If(IsBlank(cmbBok.Selected.ID), DisplayMode.Disabled, DisplayMode.Edit)
+- txtNyttKapitel:
+    Control: Classic/TextInput@2.3.2
+    Properties:
+      Default: =""
+      HintText: ="Nytt kapitel…"
+      X: =20
+      Y: =296
+      Width: =300
+      Height: =36
+      Size: =12
+      BorderColor: =RGBA(221, 226, 236, 1)
+      RadiusTopLeft: =6
+      RadiusTopRight: =6
+      RadiusBottomLeft: =6
+      RadiusBottomRight: =6
+      DisplayMode: =If(IsBlank(cmbBok.Selected.ID), DisplayMode.Disabled, DisplayMode.Edit)
+- btnNyttKapitel:
+    Control: Classic/Button@2.2.0
+    Properties:
+      Text: ="Skapa kapitel"
+      X: =325
+      Y: =296
+      Width: =95
+      Height: =36
+      OnSelect: |-
+        =If(
+            !IsBlank(Trim(txtNyttKapitel.Text)) && !IsBlank(cmbBok.Selected.ID),
+            Set(
+                varKapitelID,
+                Patch(
+                    Kapitel,
+                    Defaults(Kapitel),
+                    {
+                        Title: Trim(txtNyttKapitel.Text),
+                        BokID: cmbBok.Selected.ID,
+                        Ordning: Coalesce(
+                            First(Sort(Filter(Kapitel, BokID = cmbBok.Selected.ID), Ordning, SortOrder.Descending)).Ordning,
+                            0
+                        ) + 1
+                    }
+                ).ID
+            );
+            Reset(txtNyttKapitel);
+            Reset(cmbKapitel),
+            Notify("Välj bok och skriv kapitlets namn.", NotificationType.Warning)
+        )
+      Fill: =RGBA(255, 255, 255, 1)
+      Color: =RGBA(47, 91, 211, 1)
+      HoverFill: =RGBA(231, 237, 252, 1)
+      HoverColor: =RGBA(47, 91, 211, 1)
+      PressedFill: =RGBA(231, 237, 252, 1)
+      BorderColor: =RGBA(47, 91, 211, 1)
+      BorderThickness: =2
+      RadiusTopLeft: =8
+      RadiusTopRight: =8
+      RadiusBottomLeft: =8
+      RadiusBottomRight: =8
+      Size: =10
+      FontWeight: =FontWeight.Semibold
+      DisplayMode: =If(IsBlank(cmbBok.Selected.ID), DisplayMode.Disabled, DisplayMode.Edit)
+- lblSprak:
+    Control: Label@2.5.1
+    Properties:
+      Text: ="Språk för fristående glosor"
+      X: =20
+      Y: =342
+      Width: =400
+      Height: =30
+      Color: =RGBA(28, 35, 51, 1)
+      Size: =13
+      FontWeight: =FontWeight.Semibold
+      Visible: =IsBlank(cmbBok.Selected.ID)
+- cmbSprak:
+    Control: Classic/ComboBox@2.4.0
+    Properties:
+      Items: =Sprakval
+      DisplayFields: =["Namn"]
+      SearchFields: =["Namn"]
+      SelectMultiple: =false
+      InputTextPlaceholder: ="Välj språk"
+      X: =20
+      Y: =370
+      Width: =400
+      Height: =40
+      Visible: =IsBlank(cmbBok.Selected.ID)
+- lblTips:
+    Control: Label@2.5.1
+    Properties:
+      Text: |-
+        ="Tips när du skriver glosor
+
+        • Skriv grundform om inget annat ska tränas.
+        • Använd versal i början bara om ordet alltid skrivs så (der Hund).
+        • Skriv gärna artikel på substantiv: la casa, der Hund, das Haus – inte bara casa, Hund, Haus.
+        • Färgmarkera genus med knappen efter ordet: röd = femininum, blå = maskulinum, grön = neutrum. Appen föreslår färg utifrån artikeln.
+        • Flera godkända svar: skriv / mellan (la casa / el hogar). Valfri del inom parentes: (se) llamar."
+      X: =20
+      Y: =425
+      Width: =400
+      Height: =320
+      Color: =RGBA(28, 35, 51, 1)
+      Size: =11
+      Fill: =RGBA(231, 237, 252, 1)
+      VerticalAlign: =VerticalAlign.Top
+      PaddingTop: =12
+      PaddingLeft: =14
+      PaddingRight: =14
+- lblImport:
+    Control: Label@2.5.1
+    Properties:
+      Text: ="3. Klistra in glosor – en per rad, tabb mellan orden"
+      X: =440
+      Y: =76
+      Width: =460
+      Height: =30
+      Color: =RGBA(28, 35, 51, 1)
+      Size: =13
+      FontWeight: =FontWeight.Semibold
+- txtImport:
+    Control: Classic/TextInput@2.3.2
+    Properties:
+      Default: =""
+      HintText: ="house → hus (tabb mellan orden)" & Char(10) & "dog → hund" & Char(10) & "Fungerar också med ; eller - mellan."
+      X: =440
+      Y: =104
+      Width: =460
+      Height: =100
+      Size: =12
+      BorderColor: =RGBA(221, 226, 236, 1)
+      RadiusTopLeft: =6
+      RadiusTopRight: =6
+      RadiusBottomLeft: =6
+      RadiusBottomRight: =6
+      Mode: =TextMode.MultiLine
+- btnTolka:
+    Control: Classic/Button@2.2.0
+    Properties:
+      Text: ="Lägg till raderna ↓"
+      X: =440
+      Y: =210
+      Width: =220
+      Height: =38
+      OnSelect: |-
+        =With(
+            {
+                rader: Filter(
+                    Split(Substitute(txtImport.Text, Char(13), ""), Char(10)),
+                    !IsBlank(Trim(Value))
+                ),
+                start: Coalesce(Max(colImport, Nr), 0),
+                valtSprak: lblGlosSprak.Text
+            },
+            Collect(
+                colImport,
+                ForAll(
+                    Sequence(CountRows(rader)) As n,
+                    With(
+                        { rad: Index(rader, n.Value).Value },
+                        With(
+                            {
+                                delar: If(
+                                    !IsBlank(Find(Char(9), rad)), Split(rad, Char(9)),
+                                    !IsBlank(Find(";", rad)), Split(rad, ";"),
+                                    !IsBlank(Find(" - ", rad)), Split(rad, " - "),
+                                    !IsBlank(Find(" = ", rad)), Split(rad, " = "),
+                                    Split(rad, Char(9))
+                                )
+                            },
+                            With(
+                                {
+                                    mal: Trim(First(delar).Value),
+                                    sv: If(CountRows(delar) > 1, Trim(Last(delar).Value), "")
+                                },
+                                {
+                                    Nr: start + n.Value,
+                                    Mal: mal,
+                                    Svenska: sv,
+                                    Genus: Coalesce(LookUp(GenusArtiklar, Sprak = valtSprak && Artikel = Lower(First(Split(Trim(mal), " ")).Value), Genus), "")
+                                }
+                            )
+                        )
+                    )
+                )
+            )
+        );
+        Reset(txtImport)
+      Fill: =RGBA(47, 91, 211, 1)
+      Color: =RGBA(255, 255, 255, 1)
+      HoverFill: =ColorFade(Self.Fill, -15%)
+      HoverColor: =RGBA(255, 255, 255, 1)
+      PressedFill: =ColorFade(Self.Fill, -25%)
+      BorderColor: =RGBA(47, 91, 211, 1)
+      BorderThickness: =2
+      RadiusTopLeft: =8
+      RadiusTopRight: =8
+      RadiusBottomLeft: =8
+      RadiusBottomRight: =8
+      Size: =12
+      FontWeight: =FontWeight.Semibold
+- btnByt:
+    Control: Classic/Button@2.2.0
+    Properties:
+      Text: ="⇄ Byt plats på språken"
+      X: =680
+      Y: =210
+      Width: =220
+      Height: =38
+      OnSelect: |-
+        =ClearCollect(colImportTmp, colImport);
+        ClearCollect(
+            colImport,
+            ForAll(
+                colImportTmp As r,
+                {
+                    Nr: r.Nr,
+                    Mal: r.Svenska,
+                    Svenska: r.Mal,
+                    Genus: Coalesce(LookUp(GenusArtiklar, Sprak = lblGlosSprak.Text && Artikel = Lower(First(Split(Trim(r.Svenska), " ")).Value), Genus), "")
+                }
+            )
+        );
+        Clear(colImportTmp)
+      Fill: =RGBA(255, 255, 255, 1)
+      Color: =RGBA(47, 91, 211, 1)
+      HoverFill: =RGBA(231, 237, 252, 1)
+      HoverColor: =RGBA(47, 91, 211, 1)
+      PressedFill: =RGBA(231, 237, 252, 1)
+      BorderColor: =RGBA(47, 91, 211, 1)
+      BorderThickness: =2
+      RadiusTopLeft: =8
+      RadiusTopRight: =8
+      RadiusBottomLeft: =8
+      RadiusBottomRight: =8
+      Size: =12
+      FontWeight: =FontWeight.Semibold
+- txtMal:
+    Control: Classic/TextInput@2.3.2
+    Properties:
+      Default: =""
+      HintText: ="Målspråk, t.ex. la casa"
+      X: =440
+      Y: =256
+      Width: =175
+      Height: =38
+      Size: =12
+      BorderColor: =RGBA(221, 226, 236, 1)
+      RadiusTopLeft: =6
+      RadiusTopRight: =6
+      RadiusBottomLeft: =6
+      RadiusBottomRight: =6
+- txtSv:
+    Control: Classic/TextInput@2.3.2
+    Properties:
+      Default: =""
+      HintText: ="Svenska, t.ex. huset"
+      X: =620
+      Y: =256
+      Width: =200
+      Height: =38
+      Size: =12
+      BorderColor: =RGBA(221, 226, 236, 1)
+      RadiusTopLeft: =6
+      RadiusTopRight: =6
+      RadiusBottomLeft: =6
+      RadiusBottomRight: =6
+- btnLaggTill:
+    Control: Classic/Button@2.2.0
+    Properties:
+      Text: ="+ Lägg till"
+      X: =825
+      Y: =256
+      Width: =75
+      Height: =38
+      OnSelect: |-
+        =If(
+            !IsBlank(Trim(txtMal.Text)),
+            Collect(
+                colImport,
+                {
+                    Nr: Coalesce(Max(colImport, Nr), 0) + 1,
+                    Mal: Trim(txtMal.Text),
+                    Svenska: Trim(txtSv.Text),
+                    Genus: Coalesce(LookUp(GenusArtiklar, Sprak = lblGlosSprak.Text && Artikel = Lower(First(Split(Trim(txtMal.Text), " ")).Value), Genus), "")
+                }
+            );
+            Reset(txtMal);
+            Reset(txtSv);
+            SetFocus(txtMal)
+        )
+      Fill: =RGBA(47, 91, 211, 1)
+      Color: =RGBA(255, 255, 255, 1)
+      HoverFill: =ColorFade(Self.Fill, -15%)
+      HoverColor: =RGBA(255, 255, 255, 1)
+      PressedFill: =ColorFade(Self.Fill, -25%)
+      BorderColor: =RGBA(47, 91, 211, 1)
+      BorderThickness: =2
+      RadiusTopLeft: =8
+      RadiusTopRight: =8
+      RadiusBottomLeft: =8
+      RadiusBottomRight: =8
+      Size: =10
+      FontWeight: =FontWeight.Semibold
+- lblImpRubMal:
+    Control: Label@2.5.1
+    Properties:
+      Text: ="Målspråk"
+      X: =440
+      Y: =300
+      Width: =175
+      Height: =24
+      Color: =RGBA(91, 101, 120, 1)
+      Size: =10
+- lblImpRubSv:
+    Control: Label@2.5.1
+    Properties:
+      Text: ="Svenska"
+      X: =620
+      Y: =300
+      Width: =150
+      Height: =24
+      Color: =RGBA(91, 101, 120, 1)
+      Size: =10
+- lblImpRubGenus:
+    Control: Label@2.5.1
+    Properties:
+      Text: ="Genus"
+      X: =775
+      Y: =300
+      Width: =75
+      Height: =24
+      Color: =RGBA(91, 101, 120, 1)
+      Size: =10
+- galImport:
+    Control: Gallery@2.15.0
+    Variant: Vertical
+    Properties:
+      Items: =colImport
+      X: =440
+      Y: =324
+      Width: =460
+      Height: =340
+      TemplateSize: =46
+      TemplatePadding: =0
+      Fill: =RGBA(255, 255, 255, 1)
+      BorderColor: =RGBA(221, 226, 236, 1)
+      BorderThickness: =1
+      ShowScrollbar: =true
+    Children:
+      - txtRadMal:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            Default: =ThisItem.Mal
+            HintText: =""
+            X: =0
+            Y: =4
+            Width: =175
+            Height: =38
+            Size: =12
+            BorderColor: =RGBA(221, 226, 236, 1)
+            RadiusTopLeft: =6
+            RadiusTopRight: =6
+            RadiusBottomLeft: =6
+            RadiusBottomRight: =6
+            Color: =Switch(ThisItem.Genus, "f", RGBA(211, 47, 47, 1), "m", RGBA(31, 95, 209, 1), "n", RGBA(22, 138, 61, 1), RGBA(28, 35, 51, 1))
+            FontWeight: =FontWeight.Semibold
+            OnChange: |-
+              =Patch(colImport, LookUp(colImport, Nr = ThisItem.Nr), { Mal: Self.Text })
+      - txtRadSv:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            Default: =ThisItem.Svenska
+            HintText: =""
+            X: =180
+            Y: =4
+            Width: =150
+            Height: =38
+            Size: =12
+            BorderColor: =If(IsBlank(Trim(ThisItem.Svenska)), RGBA(198, 40, 40, 1), RGBA(221, 226, 236, 1))
+            RadiusTopLeft: =6
+            RadiusTopRight: =6
+            RadiusBottomLeft: =6
+            RadiusBottomRight: =6
+            OnChange: |-
+              =Patch(colImport, LookUp(colImport, Nr = ThisItem.Nr), { Svenska: Self.Text })
+      - btnRadGenus:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: =Switch(ThisItem.Genus, "m", "mask.", "f", "fem.", "n", "neutr.", "genus")
+            X: =335
+            Y: =6
+            Width: =75
+            Height: =34
+            OnSelect: |-
+              =Patch(colImport, LookUp(colImport, Nr = ThisItem.Nr), { Genus: Switch(ThisItem.Genus, "m", "f", "f", "n", "n", "", "m") })
+            Fill: =Switch(ThisItem.Genus, "f", RGBA(211, 47, 47, 1), "m", RGBA(31, 95, 209, 1), "n", RGBA(22, 138, 61, 1), RGBA(230, 233, 240, 1))
+            Color: =If(IsBlank(ThisItem.Genus), RGBA(91, 101, 120, 1), RGBA(255, 255, 255, 1))
+            HoverFill: =ColorFade(Self.Fill, -15%)
+            HoverColor: =Self.Color
+            PressedFill: =ColorFade(Self.Fill, -25%)
+            BorderColor: =RGBA(47, 91, 211, 1)
+            BorderThickness: =0
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            Size: =10
+            FontWeight: =FontWeight.Semibold
+      - btnRadTaBort:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: ="✕"
+            X: =415
+            Y: =6
+            Width: =34
+            Height: =34
+            OnSelect: =Remove(colImport, LookUp(colImport, Nr = ThisItem.Nr))
+            Fill: =RGBA(255, 255, 255, 1)
+            Color: =RGBA(198, 40, 40, 1)
+            HoverFill: =RGBA(231, 237, 252, 1)
+            HoverColor: =RGBA(198, 40, 40, 1)
+            PressedFill: =RGBA(231, 237, 252, 1)
+            BorderColor: =RGBA(47, 91, 211, 1)
+            BorderThickness: =0
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            Size: =12
+            FontWeight: =FontWeight.Semibold
+      - rectRadLinje:
+          Control: Rectangle@2.3.0
+          Properties:
+            X: =0
+            Y: =Parent.TemplateHeight - 1
+            Width: =Parent.TemplateWidth
+            Height: =1
+            Fill: =RGBA(221, 226, 236, 1)
+- lblImportVarning:
+    Control: Label@2.5.1
+    Properties:
+      Text: =If(CountRows(Filter(colImport, IsBlank(Trim(Svenska)) || IsBlank(Trim(Mal)))) > 0, "Någon rad saknar ord (röd ram).", IsBlank(lblGlosSprak.Text), "Välj bok eller språk först.", !IsBlank(cmbBok.Selected.ID) && IsBlank(cmbKapitel.Selected.ID), "Välj kapitel först.", "")
+      X: =440
+      Y: =668
+      Width: =460
+      Height: =24
+      Color: =RGBA(198, 40, 40, 1)
+      Size: =10
+- btnSparaGlosor:
+    Control: Classic/Button@2.2.0
+    Properties:
+      Text: ="Spara " & CountRows(colImport) & " glosor"
+      X: =440
+      Y: =694
+      Width: =460
+      Height: =48
+      OnSelect: |-
+        =With(
+            {
+                bok: Coalesce(cmbBok.Selected.ID, 0),
+                kap: Coalesce(cmbKapitel.Selected.ID, 0),
+                valtSprak: lblGlosSprak.Text,
+                antal: CountRows(colImport)
+            },
+            Collect(
+                Glosor,
+                ForAll(
+                    colImport As r,
+                    {
+                        Title: Trim(r.Mal),
+                        Svenska: Trim(r.Svenska),
+                        Genus: r.Genus,
+                        Sprak: valtSprak,
+                        BokID: bok,
+                        KapitelID: kap,
+                        SkapadAv: User().FullName,
+                        SkapadAvEpost: User().Email
+                    }
+                )
+            );
+            If(
+                IsEmpty(Errors(Glosor)),
+                Notify(antal & " glosor sparades.", NotificationType.Success);
+                Clear(colImport),
+                Notify("Något gick fel: " & First(Errors(Glosor)).Message, NotificationType.Error)
+            )
+        )
+      Fill: =RGBA(47, 91, 211, 1)
+      Color: =RGBA(255, 255, 255, 1)
+      HoverFill: =ColorFade(Self.Fill, -15%)
+      HoverColor: =RGBA(255, 255, 255, 1)
+      PressedFill: =ColorFade(Self.Fill, -25%)
+      BorderColor: =RGBA(47, 91, 211, 1)
+      BorderThickness: =2
+      RadiusTopLeft: =8
+      RadiusTopRight: =8
+      RadiusBottomLeft: =8
+      RadiusBottomRight: =8
+      Size: =12
+      FontWeight: =FontWeight.Semibold
+      DisplayMode: =If(CountRows(colImport) > 0 && IsBlank(lblImportVarning.Text), DisplayMode.Edit, DisplayMode.Disabled)
+- lblBefintliga:
+    Control: Label@2.5.1
+    Properties:
+      Text: ="Redan inlagda här (" & CountRows(galBefintliga.AllItems) & ")"
+      X: =920
+      Y: =76
+      Width: =420
+      Height: =30
+      Color: =RGBA(28, 35, 51, 1)
+      Size: =13
+      FontWeight: =FontWeight.Semibold
+- lblBefintligaInfo:
+    Control: Label@2.5.1
+    Properties:
+      Text: ="Alla lärare kan fylla på samma kapitel. Ändringar sparas direkt."
+      X: =920
+      Y: =102
+      Width: =420
+      Height: =24
+      Color: =RGBA(91, 101, 120, 1)
+      Size: =10
+- galBefintliga:
+    Control: Gallery@2.15.0
+    Variant: Vertical
+    Properties:
+      Items: |-
+        =If(
+            !IsBlank(cmbKapitel.Selected.ID),
+            Filter(Glosor, KapitelID = cmbKapitel.Selected.ID),
+            IsBlank(cmbBok.Selected.ID) && !IsBlank(cmbSprak.Selected.Kod),
+            Filter(Glosor, BokID = 0, Sprak = cmbSprak.Selected.Kod),
+            Filter(Glosor, ID = -1)
+        )
+      X: =920
+      Y: =130
+      Width: =420
+      Height: =612
+      TemplateSize: =44
+      TemplatePadding: =0
+      Fill: =RGBA(255, 255, 255, 1)
+      BorderColor: =RGBA(221, 226, 236, 1)
+      BorderThickness: =1
+      ShowScrollbar: =true
+    Children:
+      - txtBefMal:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            Default: =ThisItem.Title
+            HintText: =""
+            X: =6
+            Y: =4
+            Width: =150
+            Height: =36
+            Size: =12
+            BorderColor: =RGBA(221, 226, 236, 1)
+            RadiusTopLeft: =6
+            RadiusTopRight: =6
+            RadiusBottomLeft: =6
+            RadiusBottomRight: =6
+            Color: =Switch(ThisItem.Genus, "f", RGBA(211, 47, 47, 1), "m", RGBA(31, 95, 209, 1), "n", RGBA(22, 138, 61, 1), RGBA(28, 35, 51, 1))
+            FontWeight: =FontWeight.Semibold
+            OnChange: |-
+              =Patch(Glosor, ThisItem, { Title: Trim(Self.Text) })
+            BorderThickness: =0
+      - txtBefSv:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            Default: =ThisItem.Svenska
+            HintText: =""
+            X: =160
+            Y: =4
+            Width: =135
+            Height: =36
+            Size: =12
+            BorderColor: =RGBA(221, 226, 236, 1)
+            RadiusTopLeft: =6
+            RadiusTopRight: =6
+            RadiusBottomLeft: =6
+            RadiusBottomRight: =6
+            OnChange: |-
+              =Patch(Glosor, ThisItem, { Svenska: Trim(Self.Text) })
+            BorderThickness: =0
+      - btnBefGenus:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: =Switch(ThisItem.Genus, "m", "mask.", "f", "fem.", "n", "neutr.", "genus")
+            X: =298
+            Y: =6
+            Width: =70
+            Height: =32
+            OnSelect: |-
+              =Patch(Glosor, ThisItem, { Genus: Switch(ThisItem.Genus, "m", "f", "f", "n", "n", "", "m") })
+            Fill: =Switch(ThisItem.Genus, "f", RGBA(211, 47, 47, 1), "m", RGBA(31, 95, 209, 1), "n", RGBA(22, 138, 61, 1), RGBA(230, 233, 240, 1))
+            Color: =If(IsBlank(ThisItem.Genus), RGBA(91, 101, 120, 1), RGBA(255, 255, 255, 1))
+            HoverFill: =ColorFade(Self.Fill, -15%)
+            HoverColor: =Self.Color
+            PressedFill: =ColorFade(Self.Fill, -25%)
+            BorderColor: =RGBA(47, 91, 211, 1)
+            BorderThickness: =0
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            Size: =10
+            FontWeight: =FontWeight.Semibold
+      - btnBefTaBort:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: ="✕"
+            X: =372
+            Y: =6
+            Width: =32
+            Height: =32
+            OnSelect: =Remove(Glosor, ThisItem)
+            Fill: =RGBA(255, 255, 255, 1)
+            Color: =RGBA(198, 40, 40, 1)
+            HoverFill: =RGBA(231, 237, 252, 1)
+            HoverColor: =RGBA(198, 40, 40, 1)
+            PressedFill: =RGBA(231, 237, 252, 1)
+            BorderColor: =RGBA(47, 91, 211, 1)
+            BorderThickness: =0
+            RadiusTopLeft: =8
+            RadiusTopRight: =8
+            RadiusBottomLeft: =8
+            RadiusBottomRight: =8
+            Size: =12
+            FontWeight: =FontWeight.Semibold
+            Visible: =ThisItem.SkapadAvEpost = User().Email
+            Tooltip: ="Ta bort glosan (bara dina egna)"
+      - rectBefLinje:
+          Control: Rectangle@2.3.0
+          Properties:
+            X: =0
+            Y: =Parent.TemplateHeight - 1
+            Width: =Parent.TemplateWidth
+            Height: =1
+            Fill: =RGBA(221, 226, 236, 1)

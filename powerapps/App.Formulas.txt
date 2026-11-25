@@ -1,0 +1,43 @@
+// Klistra in i App → egenskapen Formulas (välj "App" i trädvyn, sedan Formulas i listan uppe till vänster).
+// Ändra WebbAdress om elevsidan ligger någon annanstans.
+
+WebbAdress = "https://fjellandermedia.github.io/glosor/";
+
+Sprakval = Table(
+    { Kod: "en", Namn: "Engelska" },
+    { Kod: "es", Namn: "Spanska" },
+    { Kod: "fr", Namn: "Franska" },
+    { Kod: "de", Namn: "Tyska" },
+    { Kod: "it", Namn: "Italienska" },
+    { Kod: "pt", Namn: "Portugisiska" },
+    { Kod: "la", Namn: "Latin" },
+    { Kod: "fi", Namn: "Finska" }
+);
+
+// Förslag på genus utifrån språk och artikel. m = maskulinum (blå), f = femininum (röd), n = neutrum (grön).
+GenusArtiklar = Table(
+    { Sprak: "es", Artikel: "el", Genus: "m" },
+    { Sprak: "es", Artikel: "los", Genus: "m" },
+    { Sprak: "es", Artikel: "un", Genus: "m" },
+    { Sprak: "es", Artikel: "la", Genus: "f" },
+    { Sprak: "es", Artikel: "las", Genus: "f" },
+    { Sprak: "es", Artikel: "una", Genus: "f" },
+    { Sprak: "fr", Artikel: "le", Genus: "m" },
+    { Sprak: "fr", Artikel: "un", Genus: "m" },
+    { Sprak: "fr", Artikel: "la", Genus: "f" },
+    { Sprak: "fr", Artikel: "une", Genus: "f" },
+    { Sprak: "de", Artikel: "der", Genus: "m" },
+    { Sprak: "de", Artikel: "die", Genus: "f" },
+    { Sprak: "de", Artikel: "eine", Genus: "f" },
+    { Sprak: "de", Artikel: "das", Genus: "n" },
+    { Sprak: "it", Artikel: "il", Genus: "m" },
+    { Sprak: "it", Artikel: "lo", Genus: "m" },
+    { Sprak: "it", Artikel: "un", Genus: "m" },
+    { Sprak: "it", Artikel: "uno", Genus: "m" },
+    { Sprak: "it", Artikel: "la", Genus: "f" },
+    { Sprak: "it", Artikel: "una", Genus: "f" },
+    { Sprak: "pt", Artikel: "o", Genus: "m" },
+    { Sprak: "pt", Artikel: "um", Genus: "m" },
+    { Sprak: "pt", Artikel: "a", Genus: "f" },
+    { Sprak: "pt", Artikel: "uma", Genus: "f" }
+);
