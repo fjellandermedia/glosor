@@ -64,10 +64,25 @@ export async function hamtaListor() {
   return (data.listor ?? []).map(tolkaLista);
 }
 
+// Flödet hämtar glosorna med ett filter på ID (ID eq 1 or ID eq 2 …). Ett litet filter per anrop
+// håller SharePoint-frågan enkel och snabb oavsett hur många glosor som finns totalt.
+export const GLOSOR_PER_ANROP = 30;
+
 export async function hamtaGlosor(ids) {
   if (!ids.length) return [];
-  const data = demolage
-    ? { glosor: demo.glosor.filter((g) => ids.includes(String(g.id))) }
-    : await anropa({ action: "glosor", ids: ids.map((x) => (/^\d+$/.test(x) ? Number(x) : x)) });
-  return (data.glosor ?? []).map(tolkaGlosa).filter((g) => g.mal && g.sv);
+  if (demolage) {
+    return demo.glosor
+      .filter((g) => ids.includes(String(g.id)))
+      .map(tolkaGlosa)
+      .filter((g) => g.mal && g.sv);
+  }
+  const nummer = ids.map(Number).filter((x) => Number.isInteger(x) && x > 0);
+  const omgangar = [];
+  for (let i = 0; i < nummer.length; i += GLOSOR_PER_ANROP) omgangar.push(nummer.slice(i, i + GLOSOR_PER_ANROP));
+  const svar = await Promise.all(omgangar.map((del) => anropa({ action: "glosor", ids: del })));
+  const sedda = new Set();
+  return svar
+    .flatMap((data) => data.glosor ?? [])
+    .map(tolkaGlosa)
+    .filter((g) => g.mal && g.sv && !sedda.has(g.id) && sedda.add(g.id));
 }

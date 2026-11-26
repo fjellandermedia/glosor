@@ -63,17 +63,20 @@ Byt namn på åtgärderna **exakt** som i fetstilen nedan (klicka på åtgärden
 
 #### Fall 2: Lika med `glosor`
 
-1. **SharePoint → Hämta objekt**, namn: **Hamta_glosor**
+Flödet hämtar bara de glosor som efterfrågas, med ett filter på ID. Webbsidan skickar högst 30 ID per anrop
+(flera anrop parallellt om listan är längre). Det fungerar lika snabbt oavsett hur många glosor som finns i SharePoint,
+eftersom ID alltid är indexerat. Någon gräns på 5 000 glosor finns alltså inte.
+
+1. **Dataåtgärd → Välj** (*Select*), namn: **Valj_filter**
+   - Från: `take(coalesce(triggerBody()?['ids'], json('[]')), 100)`
+   - Växla till textläge (ikonen till höger om *Mappa*) och skriv uttrycket `concat('ID eq ', string(item()))`
+   - Resultat: `["ID eq 12", "ID eq 15", …]`
+2. **SharePoint → Hämta objekt**, namn: **Hamta_glosor**
    - Lista: `glosor_glosor`
-   - Högsta antal: `5000`
-   - **Inställningar → Sidnumrering (Pagination): På**, tröskel `5000` (högsta värdet med en vanlig licens).
-     Flödet hämtar då högst 5 000 glosor. Blir det fler, lägg filterfrågan `Sprak eq 'es'` eller liknande, eller dela upp per språk.
-2. **Dataåtgärd → Filtrera matris** (*Filter array*), namn: **Filtrera_glosor**
-   - Från: `body('Hamta_glosor')?['value']`
-   - Villkor, i avancerat läge: `@contains(triggerBody()?['ids'], item()?['ID'])`
-     (i grundläget: vänster `contains(triggerBody()?['ids'], item()?['ID'])`, *är lika med*, höger `true`)
+   - Filterfråga, som uttryck: `if(empty(body('Valj_filter')), 'ID eq 0', join(body('Valj_filter'), ' or '))`
+   - Högsta antal: `100`. Ingen sidnumrering behövs.
 3. **Dataåtgärd → Välj**, namn: **Valj_glosor**
-   - Från: `body('Filtrera_glosor')`
+   - Från: `body('Hamta_glosor')?['value']`
    - Mappa:
 
      | Nyckel | Värde (uttryck) |
@@ -118,6 +121,6 @@ curl -s -X POST -H "Content-Type: application/json" -d '{"action":"glosor","ids"
 ## Bra att veta
 
 - **Säkerhet:** URL:en innehåller en nyckel (`sig=`) och syns i webbsidans kod. Den som har den kan läsa aktiva gloslistor och glosor, men inget annat. `LarareEpost` och `SkapadAvEpost` skickas aldrig ut.
-- **Fart:** *glosor* hämtar alla glosor och filtrerar i flödet. Det tar någon sekund och fungerar bra för några tusen glosor.
-  Om det blir långsamt kan du lägga filterfrågan `Sprak eq 'es'` (eller liknande) i *Hamta_glosor*.
+- **Fart och storlek:** *glosor* gör ett litet anrop till SharePoint per 30 glosor, så det skalar till hela kommunen.
+  *listor* hämtar alla aktiva gloslistor (högst 5 000). Dölj gamla listor i appen, så räcker det länge.
 - **Den gamla sidan** använde ett annat flöde med `{"skola": …, "kurs": …}`. Det kan stängas av när det här fungerar.
