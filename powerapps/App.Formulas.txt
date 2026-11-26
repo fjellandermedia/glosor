@@ -1,7 +1,23 @@
-// Klistra in i App → egenskapen Formulas (välj "App" i trädvyn, sedan Formulas i listan uppe till vänster).
-// Ändra WebbAdress om elevsidan ligger någon annanstans.
+// Klistra in i App → egenskapen Formulas (välj App i trädvyn, sedan Formulas i listan uppe till vänster).
 
+// Adressen till elevernas övningssida. Används för länkarna till gloslistorna.
 WebbAdress = "https://fjellandermedia.github.io/glosor/";
+
+// Färgschemat. Alla färger i appen hämtas härifrån – ändra en färgkod så ändras hela appen.
+Tema = {
+    Primar: ColorValue("#2F5BD3"),    // knappar, sidhuvud, länkar
+    PrimarLjus: ColorValue("#E7EDFC"),    // tipsruta, markeringar
+    Bakgrund: ColorValue("#F4F6FB"),    // skärmarnas bakgrund
+    Yta: ColorValue("#FFFFFF"),    // kort/paneler
+    Linje: ColorValue("#DDE2EC"),    // ramar och avdelare
+    Brodtext: ColorValue("#1C2333"),    // vanlig text
+    TextDampad: ColorValue("#5B6578"),    // hjälptexter
+    TextPaPrimar: ColorValue("#FFFFFF"),    // text på sidhuvudet
+    Fel: ColorValue("#C62828"),    // varningar
+    GenusF: ColorValue("#D32F2F"),    // femininum
+    GenusM: ColorValue("#1F5FD1"),    // maskulinum
+    GenusN: ColorValue("#168A3D")    // neutrum
+};
 
 Sprakval = Table(
     { Kod: "en", Namn: "Engelska" },
@@ -14,7 +30,7 @@ Sprakval = Table(
     { Kod: "fi", Namn: "Finska" }
 );
 
-// Förslag på genus utifrån språk och artikel. m = maskulinum (blå), f = femininum (röd), n = neutrum (grön).
+// Förslag på genus utifrån språk och artikel. m = maskulinum, f = femininum, n = neutrum.
 GenusArtiklar = Table(
     { Sprak: "es", Artikel: "el", Genus: "m" },
     { Sprak: "es", Artikel: "los", Genus: "m" },

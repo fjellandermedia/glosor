@@ -1,211 +1,233 @@
 Screens:
   scrStart:
     Properties:
-      Fill: =RGBA(244, 246, 251, 1)
+      Fill: =Tema.Bakgrund
     Children:
-      - rectStartHuvud:
-          Control: Rectangle@2.3.0
+      - conStart:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
           Properties:
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutGap: =0
+            Fill: =Tema.Bakgrund
+            DropShadow: =DropShadow.None
             X: =0
             Y: =0
             Width: =Parent.Width
-            Height: =64
-            Fill: =RGBA(47, 91, 211, 1)
-      - lblStartTitel:
-          Control: Label@2.5.1
-          Properties:
-            Text: ="Glosor – lärarverktyg"
-            X: =24
-            Y: =0
-            Width: =800
-            Height: =64
-            Color: =RGBA(255, 255, 255, 1)
-            Size: =20
-            FontWeight: =FontWeight.Bold
-      - lblStartHej:
-          Control: Label@2.5.1
-          Properties:
-            Text: ="Hej " & User().FullName & "! Vad vill du göra?"
-            X: =40
-            Y: =100
-            Width: =Parent.Width - 80
-            Height: =50
-            Color: =RGBA(28, 35, 51, 1)
-            Size: =16
-      - rectStartGlosor:
-          Control: Rectangle@2.3.0
-          Properties:
-            X: =40 + 0 * ((Parent.Width - 120) / 3 + 20)
-            Y: =170
-            Width: =(Parent.Width - 120) / 3
-            Height: =230
-            Fill: =RGBA(255, 255, 255, 1)
-            BorderColor: =RGBA(221, 226, 236, 1)
-            BorderThickness: =1
-      - lblStartGlosorRubrik:
-          Control: Label@2.5.1
-          Properties:
-            Text: ="Lägg in glosor"
-            X: =40 + 0 * ((Parent.Width - 120) / 3 + 20) + 24
-            Y: =190
-            Width: =(Parent.Width - 120) / 3 - 48
-            Height: =40
-            Color: =RGBA(28, 35, 51, 1)
-            Size: =18
-            FontWeight: =FontWeight.Bold
-      - lblStartGlosorText:
-          Control: Label@2.5.1
-          Properties:
-            Text: ="Skriv in eller klistra in glosor till en bok och ett kapitel. Flera lärare kan fylla på samma kapitel."
-            X: =40 + 0 * ((Parent.Width - 120) / 3 + 20) + 24
-            Y: =235
-            Width: =(Parent.Width - 120) / 3 - 48
-            Height: =90
-            Color: =RGBA(91, 101, 120, 1)
-            Size: =12
-            VerticalAlign: =VerticalAlign.Top
-      - btnStartGlosor:
-          Control: Classic/Button@2.2.0
-          Properties:
-            Text: ="Öppna"
-            X: =40 + 0 * ((Parent.Width - 120) / 3 + 20) + 24
-            Y: =335
-            Width: =150
-            Height: =44
-            OnSelect: =Navigate(scrGlosor, ScreenTransition.None)
-            Fill: =RGBA(47, 91, 211, 1)
-            Color: =RGBA(255, 255, 255, 1)
-            HoverFill: =ColorFade(Self.Fill, -15%)
-            HoverColor: =RGBA(255, 255, 255, 1)
-            PressedFill: =ColorFade(Self.Fill, -25%)
-            BorderColor: =RGBA(47, 91, 211, 1)
-            BorderThickness: =2
-            RadiusTopLeft: =8
-            RadiusTopRight: =8
-            RadiusBottomLeft: =8
-            RadiusBottomRight: =8
-            Size: =12
-            FontWeight: =FontWeight.Semibold
-      - rectStartNyLista:
-          Control: Rectangle@2.3.0
-          Properties:
-            X: =40 + 1 * ((Parent.Width - 120) / 3 + 20)
-            Y: =170
-            Width: =(Parent.Width - 120) / 3
-            Height: =230
-            Fill: =RGBA(255, 255, 255, 1)
-            BorderColor: =RGBA(221, 226, 236, 1)
-            BorderThickness: =1
-      - lblStartNyListaRubrik:
-          Control: Label@2.5.1
-          Properties:
-            Text: ="Skapa gloslista"
-            X: =40 + 1 * ((Parent.Width - 120) / 3 + 20) + 24
-            Y: =190
-            Width: =(Parent.Width - 120) / 3 - 48
-            Height: =40
-            Color: =RGBA(28, 35, 51, 1)
-            Size: =18
-            FontWeight: =FontWeight.Bold
-      - lblStartNyListaText:
-          Control: Label@2.5.1
-          Properties:
-            Text: ="Välj glosor ur böcker och kapitel, eller slå ihop befintliga listor, och dela listan med eleverna."
-            X: =40 + 1 * ((Parent.Width - 120) / 3 + 20) + 24
-            Y: =235
-            Width: =(Parent.Width - 120) / 3 - 48
-            Height: =90
-            Color: =RGBA(91, 101, 120, 1)
-            Size: =12
-            VerticalAlign: =VerticalAlign.Top
-      - btnStartNyLista:
-          Control: Classic/Button@2.2.0
-          Properties:
-            Text: ="Öppna"
-            X: =40 + 1 * ((Parent.Width - 120) / 3 + 20) + 24
-            Y: =335
-            Width: =150
-            Height: =44
-            OnSelect: |-
-              =Set(varRedigeraLista, Blank());
-              Set(varMallNamn, "");
-              Clear(colValda);
-              Navigate(scrNyLista, ScreenTransition.None)
-            Fill: =RGBA(47, 91, 211, 1)
-            Color: =RGBA(255, 255, 255, 1)
-            HoverFill: =ColorFade(Self.Fill, -15%)
-            HoverColor: =RGBA(255, 255, 255, 1)
-            PressedFill: =ColorFade(Self.Fill, -25%)
-            BorderColor: =RGBA(47, 91, 211, 1)
-            BorderThickness: =2
-            RadiusTopLeft: =8
-            RadiusTopRight: =8
-            RadiusBottomLeft: =8
-            RadiusBottomRight: =8
-            Size: =12
-            FontWeight: =FontWeight.Semibold
-      - rectStartListor:
-          Control: Rectangle@2.3.0
-          Properties:
-            X: =40 + 2 * ((Parent.Width - 120) / 3 + 20)
-            Y: =170
-            Width: =(Parent.Width - 120) / 3
-            Height: =230
-            Fill: =RGBA(255, 255, 255, 1)
-            BorderColor: =RGBA(221, 226, 236, 1)
-            BorderThickness: =1
-      - lblStartListorRubrik:
-          Control: Label@2.5.1
-          Properties:
-            Text: ="Gloslistor"
-            X: =40 + 2 * ((Parent.Width - 120) / 3 + 20) + 24
-            Y: =190
-            Width: =(Parent.Width - 120) / 3 - 48
-            Height: =40
-            Color: =RGBA(28, 35, 51, 1)
-            Size: =18
-            FontWeight: =FontWeight.Bold
-      - lblStartListorText:
-          Control: Label@2.5.1
-          Properties:
-            Text: ="Se dina och andras gloslistor, kopiera länkar till eleverna, redigera eller dölj listor."
-            X: =40 + 2 * ((Parent.Width - 120) / 3 + 20) + 24
-            Y: =235
-            Width: =(Parent.Width - 120) / 3 - 48
-            Height: =90
-            Color: =RGBA(91, 101, 120, 1)
-            Size: =12
-            VerticalAlign: =VerticalAlign.Top
-      - btnStartListor:
-          Control: Classic/Button@2.2.0
-          Properties:
-            Text: ="Öppna"
-            X: =40 + 2 * ((Parent.Width - 120) / 3 + 20) + 24
-            Y: =335
-            Width: =150
-            Height: =44
-            OnSelect: =Navigate(scrListor, ScreenTransition.None)
-            Fill: =RGBA(47, 91, 211, 1)
-            Color: =RGBA(255, 255, 255, 1)
-            HoverFill: =ColorFade(Self.Fill, -15%)
-            HoverColor: =RGBA(255, 255, 255, 1)
-            PressedFill: =ColorFade(Self.Fill, -25%)
-            BorderColor: =RGBA(47, 91, 211, 1)
-            BorderThickness: =2
-            RadiusTopLeft: =8
-            RadiusTopRight: =8
-            RadiusBottomLeft: =8
-            RadiusBottomRight: =8
-            Size: =12
-            FontWeight: =FontWeight.Semibold
-      - lblStartWebb:
-          Control: Label@2.5.1
-          Properties:
-            Text: |-
-              ="Elevernas övningssida: " & WebbAdress
-            X: =40
-            Y: =430
-            Width: =Parent.Width - 80
-            Height: =30
-            Color: =RGBA(91, 101, 120, 1)
-            Size: =11
+            Height: =Parent.Height
+          Children:
+            - conStartHuvud:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutGap: =12
+                  Fill: =Tema.Primar
+                  DropShadow: =DropShadow.None
+                  Height: =64
+                  PaddingLeft: =24
+                  PaddingRight: =24
+                Children:
+                  - txtStartTitel:
+                      Control: ModernText@1.0.0
+                      Properties:
+                        Text: ="Glosor – lärarverktyg"
+                        Size: =20
+                        FontColor: =Tema.TextPaPrimar
+                        Height: =36
+                        FontWeight: =FontWeight.Bold
+                        FillPortions: =1
+            - conStartKropp:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutGap: =16
+                  Fill: =RGBA(0, 0, 0, 0)
+                  DropShadow: =DropShadow.None
+                  FillPortions: =1
+                  PaddingTop: =24
+                  PaddingBottom: =16
+                  PaddingLeft: =32
+                  PaddingRight: =32
+                Children:
+                  - txtStartHej:
+                      Control: ModernText@1.0.0
+                      Properties:
+                        Text: ="Hej " & User().FullName & "! Vad vill du göra?"
+                        Size: =16
+                        FontColor: =Tema.Brodtext
+                        Height: =40
+                  - conStartKort:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutGap: =16
+                        Fill: =RGBA(0, 0, 0, 0)
+                        DropShadow: =DropShadow.None
+                        Height: =240
+                      Children:
+                        - conStartGlosor:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutGap: =8
+                              Fill: =Tema.Yta
+                              DropShadow: =DropShadow.None
+                              BorderColor: =Tema.Linje
+                              BorderThickness: =1
+                              RadiusTopLeft: =12
+                              RadiusTopRight: =12
+                              RadiusBottomLeft: =12
+                              RadiusBottomRight: =12
+                              PaddingTop: =16
+                              PaddingBottom: =16
+                              PaddingLeft: =16
+                              PaddingRight: =16
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =1
+                              LayoutMinWidth: =220
+                            Children:
+                              - txtStartGlosorRubrik:
+                                  Control: ModernText@1.0.0
+                                  Properties:
+                                    Text: ="Lägg in glosor"
+                                    Size: =18
+                                    FontColor: =Tema.Brodtext
+                                    Height: =36
+                                    FontWeight: =FontWeight.Bold
+                              - txtStartGlosorText:
+                                  Control: ModernText@1.0.0
+                                  Properties:
+                                    Text: ="Skriv in eller klistra in glosor till en bok och ett kapitel. Flera lärare kan fylla på samma kapitel."
+                                    Size: =12
+                                    FontColor: =Tema.TextDampad
+                                    Height: =28
+                                    FillPortions: =1
+                              - btnStartGlosor:
+                                  Control: ModernButton@1.0.0
+                                  Properties:
+                                    Text: ="Öppna"
+                                    OnSelect: =Navigate(scrGlosor, ScreenTransition.None)
+                                    Appearance: =ButtonAppearance.Primary
+                                    BasePaletteColor: =Tema.Primar
+                                    Height: =40
+                                    Width: =150
+                                    AlignInContainer: =AlignInContainer.Start
+                        - conStartNyLista:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutGap: =8
+                              Fill: =Tema.Yta
+                              DropShadow: =DropShadow.None
+                              BorderColor: =Tema.Linje
+                              BorderThickness: =1
+                              RadiusTopLeft: =12
+                              RadiusTopRight: =12
+                              RadiusBottomLeft: =12
+                              RadiusBottomRight: =12
+                              PaddingTop: =16
+                              PaddingBottom: =16
+                              PaddingLeft: =16
+                              PaddingRight: =16
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =1
+                              LayoutMinWidth: =220
+                            Children:
+                              - txtStartNyListaRubrik:
+                                  Control: ModernText@1.0.0
+                                  Properties:
+                                    Text: ="Skapa gloslista"
+                                    Size: =18
+                                    FontColor: =Tema.Brodtext
+                                    Height: =36
+                                    FontWeight: =FontWeight.Bold
+                              - txtStartNyListaText:
+                                  Control: ModernText@1.0.0
+                                  Properties:
+                                    Text: ="Välj glosor ur böcker och kapitel, eller slå ihop befintliga listor, och dela listan med eleverna."
+                                    Size: =12
+                                    FontColor: =Tema.TextDampad
+                                    Height: =28
+                                    FillPortions: =1
+                              - btnStartNyLista:
+                                  Control: ModernButton@1.0.0
+                                  Properties:
+                                    Text: ="Öppna"
+                                    OnSelect: |-
+                                      =Set(varRedigeraLista, Blank());
+                                      Set(varMallNamn, "");
+                                      Clear(colValda);
+                                      Navigate(scrNyLista, ScreenTransition.None)
+                                    Appearance: =ButtonAppearance.Primary
+                                    BasePaletteColor: =Tema.Primar
+                                    Height: =40
+                                    Width: =150
+                                    AlignInContainer: =AlignInContainer.Start
+                        - conStartListor:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutGap: =8
+                              Fill: =Tema.Yta
+                              DropShadow: =DropShadow.None
+                              BorderColor: =Tema.Linje
+                              BorderThickness: =1
+                              RadiusTopLeft: =12
+                              RadiusTopRight: =12
+                              RadiusBottomLeft: =12
+                              RadiusBottomRight: =12
+                              PaddingTop: =16
+                              PaddingBottom: =16
+                              PaddingLeft: =16
+                              PaddingRight: =16
+                              LayoutOverflowY: =LayoutOverflow.Hide
+                              FillPortions: =1
+                              LayoutMinWidth: =220
+                            Children:
+                              - txtStartListorRubrik:
+                                  Control: ModernText@1.0.0
+                                  Properties:
+                                    Text: ="Gloslistor"
+                                    Size: =18
+                                    FontColor: =Tema.Brodtext
+                                    Height: =36
+                                    FontWeight: =FontWeight.Bold
+                              - txtStartListorText:
+                                  Control: ModernText@1.0.0
+                                  Properties:
+                                    Text: ="Se dina och andras gloslistor, kopiera länkar till eleverna, redigera eller dölj listor."
+                                    Size: =12
+                                    FontColor: =Tema.TextDampad
+                                    Height: =28
+                                    FillPortions: =1
+                              - btnStartListor:
+                                  Control: ModernButton@1.0.0
+                                  Properties:
+                                    Text: ="Öppna"
+                                    OnSelect: =Navigate(scrListor, ScreenTransition.None)
+                                    Appearance: =ButtonAppearance.Primary
+                                    BasePaletteColor: =Tema.Primar
+                                    Height: =40
+                                    Width: =150
+                                    AlignInContainer: =AlignInContainer.Start
+                  - txtStartWebb:
+                      Control: ModernText@1.0.0
+                      Properties:
+                        Text: |-
+                          ="Elevernas övningssida: " & WebbAdress
+                        Size: =10
+                        FontColor: =Tema.TextDampad
+                        Height: =22

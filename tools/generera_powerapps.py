@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""Genererar YAML-koden för lärarappen i Power Apps (powerapps/*.yaml).
+"""Genererar lärarappen i Power Apps: YAML för skärmarna och App.Formulas.
 
 Kör:  python3 tools/generera_powerapps.py
 
-Varje skärm skrivs i två varianter:
-  powerapps/<skärm>.yaml           hela skärmen ("Screens:" ...), klistras in i trädvyn
-  powerapps/kontroller/<skärm>.yaml bara kontrollerna, om du hellre klistrar in dem på en tom skärm
+Skriver:
+  powerapps/<n>-<skärm>.yaml            hela skärmen ("Screens: ..."), klistras in i trädvyn
+  powerapps/kontroller/<n>-<skärm>.yaml bara kontrollerna, om Studio inte tar emot hela skärmar
+  powerapps/App.Formulas.txt            named formulas, engelsk formelsyntax (, och ;)
+  powerapps/App.Formulas.sv.txt         samma med svensk syntax (; och ;;)
+
+Appen använder moderna kontroller och containrar med automatisk layout.
+Alla färger kommer från den namngivna formeln Tema i App.Formulas.
 """
 import re
 from pathlib import Path
@@ -13,38 +18,83 @@ from pathlib import Path
 ROT = Path(__file__).resolve().parent.parent
 UT = ROT / "powerapps"
 
-# ---------- Färger ----------
-BG = "RGBA(244, 246, 251, 1)"
-ACCENT = "RGBA(47, 91, 211, 1)"
-ACCENT_LJUS = "RGBA(231, 237, 252, 1)"
-TEXT = "RGBA(28, 35, 51, 1)"
-DAMPAD = "RGBA(91, 101, 120, 1)"
-VIT = "RGBA(255, 255, 255, 1)"
-LINJE = "RGBA(221, 226, 236, 1)"
-GRA = "RGBA(230, 233, 240, 1)"
-ROD = "RGBA(198, 40, 40, 1)"
-GRON = "RGBA(23, 128, 61, 1)"
+# ---------- Kontrolltyper (som Power Apps Studio i er miljö skriver dem) ----------
+CONTAINER = "GroupContainer@1.5.0"
+TEXT = "ModernText@1.0.0"
+KNAPP = "ModernButton@1.0.0"
+INMATNING = "ModernTextInput@1.1.2"
+KOMBO = "ModernCombobox@1.1.2"
+KRYSS = "ModernCheckbox@1.0.2"
+GALLERI = "Gallery@2.15.0"
+GALLERI_VARIANT = "BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0"
+REKTANGEL = "Rectangle@2.3.0"
+
+# ---------- Namnen på SharePoint-listorna ----------
+# Formlerna nedan skrivs med de korta namnen till vänster. De byts ut mot namnen till höger
+# överallt utom inuti textsträngar ("...").
+DATAKALLOR = {
+    "Bocker": "glosor_bocker",
+    "Kapitel": "glosor_kapitel",
+    "Glosor": "glosor_glosor",
+    "Gloslistor": "glosor_gloslistor",
+}
+
+# ---------- Färgschemat ----------
+# Ändra här (och generera om), eller direkt i App.Formulas i appen.
+TEMA = [
+    ("Primar", "#2F5BD3", "knappar, sidhuvud, länkar"),
+    ("PrimarLjus", "#E7EDFC", "tipsruta, markeringar"),
+    ("Bakgrund", "#F4F6FB", "skärmarnas bakgrund"),
+    ("Yta", "#FFFFFF", "kort/paneler"),
+    ("Linje", "#DDE2EC", "ramar och avdelare"),
+    ("Brodtext", "#1C2333", "vanlig text"),
+    ("TextDampad", "#5B6578", "hjälptexter"),
+    ("TextPaPrimar", "#FFFFFF", "text på sidhuvudet"),
+    ("Fel", "#C62828", "varningar"),
+    ("GenusF", "#D32F2F", "femininum"),
+    ("GenusM", "#1F5FD1", "maskulinum"),
+    ("GenusN", "#168A3D", "neutrum"),
+]
+
+SPRAKVAL = [
+    ("en", "Engelska"),
+    ("es", "Spanska"),
+    ("fr", "Franska"),
+    ("de", "Tyska"),
+    ("it", "Italienska"),
+    ("pt", "Portugisiska"),
+    ("la", "Latin"),
+    ("fi", "Finska"),
+]
+
+GENUS_ARTIKLAR = [
+    ("es", ["el", "los", "un"], ["la", "las", "una"], []),
+    ("fr", ["le", "un"], ["la", "une"], []),
+    ("de", ["der"], ["die", "eine"], ["das"]),
+    ("it", ["il", "lo", "un", "uno"], ["la", "una"], []),
+    ("pt", ["o", "um"], ["a", "uma"], []),
+]
 
 
-def genusfarg(uttryck, standard=TEXT):
+# ---------- Formel-hjälp ----------
+
+
+def genusfarg(x, standard="Tema.Brodtext"):
+    return f'Switch({x}, "f", Tema.GenusF, "m", Tema.GenusM, "n", Tema.GenusN, {standard})'
+
+
+def genustext(x):
+    return f'Switch({x}, "m", "mask.", "f", "fem.", "n", "neutr.", "genus")'
+
+
+def nasta_genus(x):
+    return f'Switch({x}, "m", "f", "f", "n", "n", "", "m")'
+
+
+def genusforslag(ord_x, sprak_x):
     return (
-        f'Switch({uttryck}, "f", RGBA(211, 47, 47, 1), "m", RGBA(31, 95, 209, 1), '
-        f'"n", RGBA(22, 138, 61, 1), {standard})'
-    )
-
-
-def genusknapptext(uttryck):
-    return f'Switch({uttryck}, "m", "mask.", "f", "fem.", "n", "neutr.", "genus")'
-
-
-def nasta_genus(uttryck):
-    return f'Switch({uttryck}, "m", "f", "f", "n", "n", "", "m")'
-
-
-def genusforslag(ord_uttryck, sprak_uttryck):
-    return (
-        f"Coalesce(LookUp(GenusArtiklar, Sprak = {sprak_uttryck} && "
-        f'Artikel = Lower(First(Split(Trim({ord_uttryck}), " ")).Value), Genus), "")'
+        f"Coalesce(LookUp(GenusArtiklar, Sprak = {sprak_x} && "
+        f'Artikel = Lower(First(Split(Trim({ord_x}), " ")).Value), Genus), "")'
     )
 
 
@@ -55,125 +105,190 @@ def ctl(namn, typ, props, children=None, variant=None):
     return {"namn": namn, "typ": typ, "variant": variant, "props": props, "children": children or []}
 
 
+def behallare(namn, riktning, children, **p):
+    """Container med automatisk layout. riktning: 'v' (lodrät) eller 'h' (vågrät)."""
+    props = {
+        "LayoutDirection": "LayoutDirection.Vertical" if riktning == "v" else "LayoutDirection.Horizontal",
+        "LayoutAlignItems": "LayoutAlignItems.Stretch",
+        "LayoutGap": 8,
+        "Fill": "RGBA(0, 0, 0, 0)",
+        "DropShadow": "DropShadow.None",
+    }
+    props.update(p)
+    return ctl(namn, CONTAINER, props, children, variant="AutoLayout")
+
+
+def kort(namn, children, **p):
+    """Vit panel med ram och rundade hörn."""
+    props = dict(
+        Fill="Tema.Yta",
+        BorderColor="Tema.Linje",
+        BorderThickness=1,
+        RadiusTopLeft=12,
+        RadiusTopRight=12,
+        RadiusBottomLeft=12,
+        RadiusBottomRight=12,
+        PaddingTop=16,
+        PaddingBottom=16,
+        PaddingLeft=16,
+        PaddingRight=16,
+        LayoutGap=8,
+        LayoutOverflowY="LayoutOverflow.Scroll",
+    )
+    props.update(p)
+    return behallare(namn, "v", children, **props)
+
+
+def rad(namn, children, hojd=40, **p):
+    return behallare(namn, "h", children, Height=hojd, **p)
+
+
+def text(namn, txt, hojd=28, storlek=12, fet=False, farg="Tema.Brodtext", **p):
+    props = {"Text": txt, "Size": storlek, "FontColor": farg, "Height": hojd}
+    if fet:
+        props["FontWeight"] = "FontWeight.Semibold" if fet is True else fet
+    props.update(p)
+    return ctl(namn, TEXT, props)
+
+
+def rubrik(namn, txt, **p):
+    return text(namn, txt, hojd=30, storlek=14, fet=True, **p)
+
+
+def hjalptext(namn, txt, **p):
+    return text(namn, txt, hojd=22, storlek=10, farg="Tema.TextDampad", **p)
+
+
+def knapp(namn, txt, onselect, sekundar=False, **p):
+    props = {
+        "Text": txt,
+        "OnSelect": onselect,
+        "Appearance": "ButtonAppearance.Secondary" if sekundar else "ButtonAppearance.Primary",
+        "BasePaletteColor": "Tema.Primar",
+        "Height": 40,
+    }
+    props.update(p)
+    return ctl(namn, KNAPP, props)
+
+
+def inmatning(namn, platshallare="", varde='""', **p):
+    props = {"Value": varde, "Placeholder": f'"{platshallare}"', "Height": 40}
+    props.update(p)
+    return ctl(namn, INMATNING, props)
+
+
+def kombo(namn, items, visa, platshallare="", flera=False, **p):
+    props = {
+        "Items": items,
+        "ItemDisplayText": visa,
+        "SelectMultiple": "true" if flera else "false",
+        "Placeholder": f'"{platshallare}"',
+        "Height": 40,
+    }
+    props.update(p)
+    return ctl(namn, KOMBO, props)
+
+
+def kryss(namn, etikett, **p):
+    props = {"Label": etikett, "Height": 36}
+    props.update(p)
+    return ctl(namn, KRYSS, props)
+
+
+def galleri(namn, items, mallhojd, children, **p):
+    props = {
+        "Items": items,
+        "TemplateSize": mallhojd,
+        "TemplatePadding": 0,
+        "FillPortions": 1,
+        "LayoutMinHeight": 160,
+        "Fill": "RGBA(0, 0, 0, 0)",
+        "BorderThickness": 0,
+        "ShowScrollbar": "true",
+    }
+    props.update(p)
+    return ctl(namn, GALLERI, props, children, variant=GALLERI_VARIANT)
+
+
+def avdelare(namn):
+    return ctl(
+        namn,
+        REKTANGEL,
+        {
+            "X": 0,
+            "Y": "Parent.TemplateHeight - 1",
+            "Width": "Parent.TemplateWidth",
+            "Height": 1,
+            "Fill": "Tema.Linje",
+        },
+    )
+
+
 def pos(x, y, w, h):
     return {"X": x, "Y": y, "Width": w, "Height": h}
 
 
-def label(namn, text, x, y, w, h, **p):
-    props = {"Text": text, **pos(x, y, w, h), "Color": TEXT, "Size": 12}
+def skarm(prefix, titel, innehall, hem=True):
+    """Hela skärmen: en container som fyller skärmen, med sidhuvud och innehåll."""
+    huvud = rad(
+        f"con{prefix}Huvud",
+        [
+            text(
+                f"txt{prefix}Titel",
+                titel,
+                hojd=36,
+                storlek=20,
+                fet="FontWeight.Bold",
+                farg="Tema.TextPaPrimar",
+                FillPortions=1,
+            ),
+            hem
+            and knapp(
+                f"btn{prefix}Hem",
+                '"Start"',
+                "Navigate(scrStart, ScreenTransition.None)",
+                sekundar=True,
+                Width=120,
+            ),
+        ],
+        hojd=64,
+        Fill="Tema.Primar",
+        LayoutAlignItems="LayoutAlignItems.Center",
+        PaddingLeft=24,
+        PaddingRight=24,
+        LayoutGap=12,
+    )
+    huvud["children"] = [c for c in huvud["children"] if c]
+    return behallare(
+        f"con{prefix}",
+        "v",
+        [huvud, innehall],
+        X=0,
+        Y=0,
+        Width="Parent.Width",
+        Height="Parent.Height",
+        Fill="Tema.Bakgrund",
+        LayoutGap=0,
+    )
+
+
+def kropp(namn, children, riktning="h", **p):
+    props = dict(
+        FillPortions=1,
+        PaddingTop=16,
+        PaddingBottom=16,
+        PaddingLeft=16,
+        PaddingRight=16,
+        LayoutGap=16,
+    )
     props.update(p)
-    return ctl(namn, "Label@2.5.1", props)
+    return behallare(namn, riktning, children, **props)
 
 
-def rubrik(namn, text, x, y, w, h=30, **p):
-    return label(namn, text, x, y, w, h, FontWeight="FontWeight.Semibold", Size=13, **p)
-
-
-def knapp(namn, text, x, y, w, h, onselect, sekundar=False, **p):
-    props = {
-        "Text": text,
-        **pos(x, y, w, h),
-        "OnSelect": onselect,
-        "Fill": VIT if sekundar else ACCENT,
-        "Color": ACCENT if sekundar else VIT,
-        "HoverFill": ACCENT_LJUS if sekundar else "ColorFade(Self.Fill, -15%)",
-        "HoverColor": ACCENT if sekundar else VIT,
-        "PressedFill": ACCENT_LJUS if sekundar else "ColorFade(Self.Fill, -25%)",
-        "BorderColor": ACCENT,
-        "BorderThickness": 2,
-        "RadiusTopLeft": 8,
-        "RadiusTopRight": 8,
-        "RadiusBottomLeft": 8,
-        "RadiusBottomRight": 8,
-        "Size": 12,
-        "FontWeight": "FontWeight.Semibold",
-    }
-    props.update(p)
-    return ctl(namn, "Classic/Button@2.2.0", props)
-
-
-def textruta(namn, x, y, w, h, hint="", default='""', **p):
-    props = {
-        "Default": default,
-        "HintText": f'"{hint}"',
-        **pos(x, y, w, h),
-        "Size": 12,
-        "BorderColor": LINJE,
-        "RadiusTopLeft": 6,
-        "RadiusTopRight": 6,
-        "RadiusBottomLeft": 6,
-        "RadiusBottomRight": 6,
-    }
-    props.update(p)
-    return ctl(namn, "Classic/TextInput@2.3.2", props)
-
-
-def kombobox(namn, items, falt, x, y, w, h=40, platshallare="", flera=False, **p):
-    props = {
-        "Items": items,
-        "DisplayFields": f'["{falt}"]',
-        "SearchFields": f'["{falt}"]',
-        "SelectMultiple": "true" if flera else "false",
-        "InputTextPlaceholder": f'"{platshallare}"',
-        **pos(x, y, w, h),
-    }
-    props.update(p)
-    return ctl(namn, "Classic/ComboBox@2.4.0", props)
-
-
-def kryssruta(namn, text, x, y, w, h, **p):
-    props = {"Text": text, **pos(x, y, w, h), "Size": 12, "Color": TEXT, "CheckboxBorderColor": ACCENT}
-    props.update(p)
-    return ctl(namn, "Classic/CheckBox@2.1.0", props)
-
-
-def rektangel(namn, x, y, w, h, fill, **p):
-    props = {**pos(x, y, w, h), "Fill": fill}
-    props.update(p)
-    return ctl(namn, "Rectangle@2.3.0", props)
-
-
-def galleri(namn, items, x, y, w, h, mallhojd, children, **p):
-    props = {
-        "Items": items,
-        **pos(x, y, w, h),
-        "TemplateSize": mallhojd,
-        "TemplatePadding": 0,
-        "Fill": VIT,
-        "BorderColor": LINJE,
-        "BorderThickness": 1,
-        "ShowScrollbar": "true",
-    }
-    props.update(p)
-    return ctl(namn, "Gallery@2.15.0", props, children, variant="Vertical")
-
-
-def sidhuvud(prefix, titel):
-    return [
-        rektangel(f"rect{prefix}Huvud", 0, 0, "Parent.Width", 64, ACCENT),
-        label(f"lbl{prefix}Titel", titel, 24, 0, 800, 64, Color=VIT, Size=20, FontWeight="FontWeight.Bold"),
-        knapp(
-            f"btn{prefix}Hem",
-            '"⌂ Start"',
-            "Parent.Width - 150",
-            12,
-            130,
-            40,
-            "Navigate(scrStart, ScreenTransition.None)",
-            sekundar=True,
-        ),
-    ]
-
-
-def rad_separator(namn, w):
-    return rektangel(namn, 0, "Parent.TemplateHeight - 1", w, 1, LINJE)
-
-
-# ---------- Skärm: Start ----------
+# ---------- Skärm 1: Start ----------
 
 
 def skarm_start():
-    kort = []
     val = [
         (
             "Glosor",
@@ -185,7 +300,7 @@ def skarm_start():
             "NyLista",
             '"Skapa gloslista"',
             '"Välj glosor ur böcker och kapitel, eller slå ihop befintliga listor, och dela listan med eleverna."',
-            "Set(varRedigeraLista, Blank());\nSet(varMallNamn, \"\");\nClear(colValda);\nNavigate(scrNyLista, ScreenTransition.None)",
+            'Set(varRedigeraLista, Blank());\nSet(varMallNamn, "");\nClear(colValda);\nNavigate(scrNyLista, ScreenTransition.None)',
         ),
         (
             "Listor",
@@ -194,61 +309,36 @@ def skarm_start():
             "Navigate(scrListor, ScreenTransition.None)",
         ),
     ]
-    for i, (n, titel, text, onselect) in enumerate(val):
-        x = f"40 + {i} * ((Parent.Width - 120) / 3 + 20)"
-        w = "(Parent.Width - 120) / 3"
-        kort += [
-            rektangel(
-                f"rectStart{n}",
-                x,
-                170,
-                w,
-                230,
-                VIT,
-                BorderColor=LINJE,
-                BorderThickness=1,
-            ),
-            label(f"lblStart{n}Rubrik", titel, f"{x} + 24", 190, f"{w} - 48", 40, Size=18, FontWeight="FontWeight.Bold"),
-            label(
-                f"lblStart{n}Text",
-                text,
-                f"{x} + 24",
-                235,
-                f"{w} - 48",
-                90,
-                Color=DAMPAD,
-                VerticalAlign="VerticalAlign.Top",
-            ),
-            knapp(f"btnStart{n}", '"Öppna"', f"{x} + 24", 335, 150, 44, onselect),
-        ]
-    kontroller = [
-        rektangel("rectStartHuvud", 0, 0, "Parent.Width", 64, ACCENT),
-        label("lblStartTitel", '"Glosor – lärarverktyg"', 24, 0, 800, 64, Color=VIT, Size=20, FontWeight="FontWeight.Bold"),
-        label(
-            "lblStartHej",
-            '"Hej " & User().FullName & "! Vad vill du göra?"',
-            40,
-            100,
-            "Parent.Width - 80",
-            50,
-            Size=16,
-        ),
-        *kort,
-        label(
-            "lblStartWebb",
-            '"Elevernas övningssida: " & WebbAdress',
-            40,
-            430,
-            "Parent.Width - 80",
-            30,
-            Color=DAMPAD,
-            Size=11,
-        ),
+    korten = [
+        kort(
+            f"conStart{n}",
+            [
+                text(f"txtStart{n}Rubrik", titel, hojd=36, storlek=18, fet="FontWeight.Bold"),
+                text(f"txtStart{n}Text", beskr, farg="Tema.TextDampad", FillPortions=1),
+                knapp(f"btnStart{n}", '"Öppna"', onselect, Width=150, AlignInContainer="AlignInContainer.Start"),
+            ],
+            FillPortions=1,
+            LayoutMinWidth=220,
+            LayoutOverflowY="LayoutOverflow.Hide",
+        )
+        for n, titel, beskr, onselect in val
     ]
-    return "scrStart", {"Fill": BG}, kontroller
+    innehall = kropp(
+        "conStartKropp",
+        [
+            text("txtStartHej", '"Hej " & User().FullName & "! Vad vill du göra?"', hojd=40, storlek=16),
+            rad("conStartKort", korten, hojd=240, LayoutGap=16),
+            hjalptext("txtStartWebb", '"Elevernas övningssida: " & WebbAdress'),
+        ],
+        riktning="v",
+        PaddingTop=24,
+        PaddingLeft=32,
+        PaddingRight=32,
+    )
+    return "scrStart", {"Fill": "Tema.Bakgrund"}, [skarm("Start", '"Glosor – lärarverktyg"', innehall, hem=False)]
 
 
-# ---------- Skärm: Lägg in glosor ----------
+# ---------- Skärm 2: Lägg in glosor ----------
 
 TIPS = (
     '"Tips när du skriver glosor' + "\n\n"
@@ -264,11 +354,11 @@ TIPS = (
 TOLKA = """With(
     {
         rader: Filter(
-            Split(Substitute(txtImport.Text, Char(13), ""), Char(10)),
+            Split(Substitute(txtImport.Value, Char(13), ""), Char(10)),
             !IsBlank(Trim(Value))
         ),
         start: Coalesce(Max(colImport, Nr), 0),
-        valtSprak: lblGlosSprak.Text
+        valtSprak: txtGlosSprak.Text
     },
     Collect(
         colImport,
@@ -306,20 +396,20 @@ TOLKA = """With(
 Reset(txtImport)""".replace("%GENUS%", genusforslag("mal", "valtSprak"))
 
 LAGG_TILL_EN = """If(
-    !IsBlank(Trim(txtMal.Text)),
+    !IsBlank(Trim(txtMal.Value)),
     Collect(
         colImport,
         {
             Nr: Coalesce(Max(colImport, Nr), 0) + 1,
-            Mal: Trim(txtMal.Text),
-            Svenska: Trim(txtSv.Text),
+            Mal: Trim(txtMal.Value),
+            Svenska: Trim(txtSv.Value),
             Genus: %GENUS%
         }
     );
     Reset(txtMal);
     Reset(txtSv);
     SetFocus(txtMal)
-)""".replace("%GENUS%", genusforslag("txtMal.Text", "lblGlosSprak.Text"))
+)""".replace("%GENUS%", genusforslag("txtMal.Value", "txtGlosSprak.Text"))
 
 BYT = """ClearCollect(colImportTmp, colImport);
 ClearCollect(
@@ -334,13 +424,13 @@ ClearCollect(
         }
     )
 );
-Clear(colImportTmp)""".replace("%GENUS%", genusforslag("r.Svenska", "lblGlosSprak.Text"))
+Clear(colImportTmp)""".replace("%GENUS%", genusforslag("r.Svenska", "txtGlosSprak.Text"))
 
 SPARA_GLOSOR = """With(
     {
         bok: Coalesce(cmbBok.Selected.ID, 0),
         kap: Coalesce(cmbKapitel.Selected.ID, 0),
-        valtSprak: lblGlosSprak.Text,
+        valtSprak: txtGlosSprak.Text,
         antal: CountRows(colImport)
     },
     Collect(
@@ -368,10 +458,10 @@ SPARA_GLOSOR = """With(
 )"""
 
 SKAPA_BOK = """If(
-    !IsBlank(Trim(txtNyBok.Text)) && !IsBlank(cmbNyBokSprak.Selected.Kod),
+    !IsBlank(Trim(txtNyBok.Value)) && !IsBlank(cmbNyBokSprak.Selected.Kod),
     Set(
         varBokID,
-        Patch(Bocker, Defaults(Bocker), { Title: Trim(txtNyBok.Text), Sprak: cmbNyBokSprak.Selected.Kod }).ID
+        Patch(Bocker, Defaults(Bocker), { Title: Trim(txtNyBok.Value), Sprak: cmbNyBokSprak.Selected.Kod }).ID
     );
     Set(varKapitelID, 0);
     Reset(txtNyBok);
@@ -382,14 +472,14 @@ SKAPA_BOK = """If(
 )"""
 
 SKAPA_KAPITEL = """If(
-    !IsBlank(Trim(txtNyttKapitel.Text)) && !IsBlank(cmbBok.Selected.ID),
+    !IsBlank(Trim(txtNyttKapitel.Value)) && !IsBlank(cmbBok.Selected.ID),
     Set(
         varKapitelID,
         Patch(
             Kapitel,
             Defaults(Kapitel),
             {
-                Title: Trim(txtNyttKapitel.Text),
+                Title: Trim(txtNyttKapitel.Value),
                 BokID: cmbBok.Selected.ID,
                 Ordning: Coalesce(
                     First(Sort(Filter(Kapitel, BokID = cmbBok.Selected.ID), Ordning, SortOrder.Descending)).Ordning,
@@ -411,300 +501,240 @@ BEFINTLIGA = """If(
     Filter(Glosor, ID = -1)
 )"""
 
+UTAN_BOK = "IsBlank(cmbBok.Selected.ID)"
+KRAVER_BOK = f"If({UTAN_BOK}, DisplayMode.Disabled, DisplayMode.Edit)"
+
+
+def genusknapp(namn, genus_x, onselect, **p):
+    return knapp(
+        namn,
+        genustext(genus_x),
+        onselect,
+        Appearance=f"If(IsBlank({genus_x}), ButtonAppearance.Secondary, ButtonAppearance.Primary)",
+        BasePaletteColor=genusfarg(genus_x, "Tema.Primar"),
+        **p,
+    )
+
+
+def taBortKnapp(namn, onselect, **p):
+    return knapp(namn, '"✕"', onselect, Appearance="ButtonAppearance.Subtle", **p)
+
 
 def skarm_glosor():
-    L, M_, R = 20, 440, 920  # vänster-, mitt- och högerkolumn
+    w = "Parent.TemplateWidth"
+    bred = f"({w} - 140) / 2"
     imp_rad = [
-        textruta(
+        inmatning(
             "txtRadMal",
-            0,
-            4,
-            175,
-            38,
-            default="ThisItem.Mal",
-            Color=genusfarg("ThisItem.Genus"),
-            FontWeight="FontWeight.Semibold",
-            OnChange="Patch(colImport, LookUp(colImport, Nr = ThisItem.Nr), { Mal: Self.Text })",
+            varde="ThisItem.Mal",
+            FontColor=genusfarg("ThisItem.Genus"),
+            OnChange="Patch(colImport, LookUp(colImport, Nr = ThisItem.Nr), { Mal: Self.Value })",
+            **pos(4, 4, bred, 40),
         ),
-        textruta(
+        inmatning(
             "txtRadSv",
-            180,
-            4,
-            150,
-            38,
-            default="ThisItem.Svenska",
-            OnChange="Patch(colImport, LookUp(colImport, Nr = ThisItem.Nr), { Svenska: Self.Text })",
-            BorderColor=f'If(IsBlank(Trim(ThisItem.Svenska)), {ROD}, {LINJE})',
+            varde="ThisItem.Svenska",
+            OnChange="Patch(colImport, LookUp(colImport, Nr = ThisItem.Nr), { Svenska: Self.Value })",
+            **pos(f"8 + {bred}", 4, bred, 40),
         ),
-        knapp(
+        genusknapp(
             "btnRadGenus",
-            genusknapptext("ThisItem.Genus"),
-            335,
-            6,
-            75,
-            34,
+            "ThisItem.Genus",
             f"Patch(colImport, LookUp(colImport, Nr = ThisItem.Nr), {{ Genus: {nasta_genus('ThisItem.Genus')} }})",
-            Fill=genusfarg("ThisItem.Genus", GRA),
-            Color=f'If(IsBlank(ThisItem.Genus), {DAMPAD}, {VIT})',
-            BorderThickness=0,
-            Size=10,
-            HoverFill="ColorFade(Self.Fill, -15%)",
-            HoverColor="Self.Color",
-            PressedFill="ColorFade(Self.Fill, -25%)",
+            **pos(f"{w} - 124", 6, 78, 36),
         ),
-        knapp(
+        taBortKnapp(
             "btnRadTaBort",
-            '"✕"',
-            415,
-            6,
-            34,
-            34,
             "Remove(colImport, LookUp(colImport, Nr = ThisItem.Nr))",
-            sekundar=True,
-            BorderThickness=0,
-            Color=ROD,
-            HoverColor=ROD,
+            **pos(f"{w} - 42", 6, 38, 36),
         ),
-        rad_separator("rectRadLinje", "Parent.TemplateWidth"),
+        avdelare("rectRadLinje"),
     ]
     bef_rad = [
-        textruta(
+        inmatning(
             "txtBefMal",
-            6,
-            4,
-            150,
-            36,
-            default="ThisItem.Title",
-            Color=genusfarg("ThisItem.Genus"),
-            FontWeight="FontWeight.Semibold",
-            OnChange="Patch(Glosor, ThisItem, { Title: Trim(Self.Text) })",
-            BorderThickness=0,
+            varde="ThisItem.Title",
+            FontColor=genusfarg("ThisItem.Genus"),
+            OnChange="Patch(Glosor, ThisItem, { Title: Trim(Self.Value) })",
+            **pos(4, 4, bred, 40),
         ),
-        textruta(
+        inmatning(
             "txtBefSv",
-            160,
-            4,
-            135,
-            36,
-            default="ThisItem.Svenska",
-            OnChange="Patch(Glosor, ThisItem, { Svenska: Trim(Self.Text) })",
-            BorderThickness=0,
+            varde="ThisItem.Svenska",
+            OnChange="Patch(Glosor, ThisItem, { Svenska: Trim(Self.Value) })",
+            **pos(f"8 + {bred}", 4, bred, 40),
         ),
-        knapp(
+        genusknapp(
             "btnBefGenus",
-            genusknapptext("ThisItem.Genus"),
-            298,
-            6,
-            70,
-            32,
+            "ThisItem.Genus",
             f"Patch(Glosor, ThisItem, {{ Genus: {nasta_genus('ThisItem.Genus')} }})",
-            Fill=genusfarg("ThisItem.Genus", GRA),
-            Color=f'If(IsBlank(ThisItem.Genus), {DAMPAD}, {VIT})',
-            BorderThickness=0,
-            Size=10,
-            HoverFill="ColorFade(Self.Fill, -15%)",
-            HoverColor="Self.Color",
-            PressedFill="ColorFade(Self.Fill, -25%)",
+            **pos(f"{w} - 124", 6, 78, 36),
         ),
-        knapp(
+        taBortKnapp(
             "btnBefTaBort",
-            '"✕"',
-            372,
-            6,
-            32,
-            32,
             "Remove(Glosor, ThisItem)",
-            sekundar=True,
-            BorderThickness=0,
-            Color=ROD,
-            HoverColor=ROD,
             Visible="ThisItem.SkapadAvEpost = User().Email",
-            Tooltip='"Ta bort glosan (bara dina egna)"',
+            **pos(f"{w} - 42", 6, 38, 36),
         ),
-        rad_separator("rectBefLinje", "Parent.TemplateWidth"),
+        avdelare("rectBefLinje"),
     ]
-    kontroller = [
-        *sidhuvud("Glos", '"Lägg in glosor"'),
-        # Dold etikett som håller språkkoden för glosorna som läggs in.
-        label(
-            "lblGlosSprak",
-            "If(IsBlank(cmbBok.Selected.ID), cmbSprak.Selected.Kod, cmbBok.Selected.Sprak)",
-            0,
-            0,
-            10,
-            10,
-            Visible="false",
-        ),
-        # ----- Vänster: bok, kapitel, språk, tips -----
-        rubrik("lblBok", '"1. Bok"', L, 76, 400),
-        kombobox(
-            "cmbBok",
-            "Sort(Bocker, Title)",
-            "Title",
-            L,
-            104,
-            400,
-            platshallare="Välj bok – lämna tomt för fristående glosor",
-            DefaultSelectedItems="Filter(Bocker, ID = varBokID)",
-            OnChange="Set(varKapitelID, 0);\nReset(cmbKapitel)",
-        ),
-        textruta("txtNyBok", L, 150, 175, 36, hint="Ny bok…"),
-        kombobox("cmbNyBokSprak", "Sprakval", "Namn", L + 180, 150, 120, h=36, platshallare="Språk"),
-        knapp("btnNyBok", '"Skapa bok"', L + 305, 150, 95, 36, SKAPA_BOK, sekundar=True, Size=10),
-        label(
-            "lblBokSprak",
-            '"Språk: " & Coalesce(LookUp(Sprakval, Kod = cmbBok.Selected.Sprak).Namn, cmbBok.Selected.Sprak)',
-            L,
-            190,
-            400,
-            26,
-            Color=DAMPAD,
-            Size=11,
-            Visible="!IsBlank(cmbBok.Selected.ID)",
-        ),
-        rubrik("lblKapitel", '"2. Kapitel"', L, 222, 400),
-        kombobox(
-            "cmbKapitel",
-            "Sort(Filter(Kapitel, BokID = Coalesce(cmbBok.Selected.ID, -1)), Ordning)",
-            "Title",
-            L,
-            250,
-            400,
-            platshallare="Välj kapitel",
-            DefaultSelectedItems="Filter(Kapitel, ID = varKapitelID)",
-            DisplayMode="If(IsBlank(cmbBok.Selected.ID), DisplayMode.Disabled, DisplayMode.Edit)",
-        ),
-        textruta(
-            "txtNyttKapitel",
-            L,
-            296,
-            300,
-            36,
-            hint="Nytt kapitel…",
-            DisplayMode="If(IsBlank(cmbBok.Selected.ID), DisplayMode.Disabled, DisplayMode.Edit)",
-        ),
-        knapp(
-            "btnNyttKapitel",
-            '"Skapa kapitel"',
-            L + 305,
-            296,
-            95,
-            36,
-            SKAPA_KAPITEL,
-            sekundar=True,
-            Size=10,
-            DisplayMode="If(IsBlank(cmbBok.Selected.ID), DisplayMode.Disabled, DisplayMode.Edit)",
-        ),
-        rubrik(
-            "lblSprak",
-            '"Språk för fristående glosor"',
-            L,
-            342,
-            400,
-            Visible="IsBlank(cmbBok.Selected.ID)",
-        ),
-        kombobox(
-            "cmbSprak",
-            "Sprakval",
-            "Namn",
-            L,
-            370,
-            400,
-            platshallare="Välj språk",
-            Visible="IsBlank(cmbBok.Selected.ID)",
-        ),
-        label(
-            "lblTips",
-            TIPS,
-            L,
-            425,
-            400,
-            320,
-            Fill=ACCENT_LJUS,
-            Size=11,
-            VerticalAlign="VerticalAlign.Top",
-            PaddingTop=12,
-            PaddingLeft=14,
-            PaddingRight=14,
-        ),
-        # ----- Mitten: in-matning -----
-        rubrik("lblImport", '"3. Klistra in glosor – en per rad, tabb mellan orden"', M_, 76, 460),
-        textruta(
-            "txtImport",
-            M_,
-            104,
-            460,
-            100,
-            Mode="TextMode.MultiLine",
-            HintText='"house → hus (tabb mellan orden)" & Char(10) & "dog → hund" & Char(10) & "Fungerar också med ; eller - mellan."',
-        ),
-        knapp("btnTolka", '"Lägg till raderna ↓"', M_, 210, 220, 38, TOLKA),
-        knapp("btnByt", '"⇄ Byt plats på språken"', M_ + 240, 210, 220, 38, BYT, sekundar=True),
-        textruta("txtMal", M_, 256, 175, 38, hint="Målspråk, t.ex. la casa"),
-        textruta("txtSv", M_ + 180, 256, 200, 38, hint="Svenska, t.ex. huset"),
-        knapp("btnLaggTill", '"+ Lägg till"', M_ + 385, 256, 75, 38, LAGG_TILL_EN, Size=10),
-        label("lblImpRubMal", '"Målspråk"', M_, 300, 175, 24, Color=DAMPAD, Size=10),
-        label("lblImpRubSv", '"Svenska"', M_ + 180, 300, 150, 24, Color=DAMPAD, Size=10),
-        label("lblImpRubGenus", '"Genus"', M_ + 335, 300, 75, 24, Color=DAMPAD, Size=10),
-        galleri("galImport", "colImport", M_, 324, 460, 340, 46, imp_rad),
-        label(
-            "lblImportVarning",
-            'If(CountRows(Filter(colImport, IsBlank(Trim(Svenska)) || IsBlank(Trim(Mal)))) > 0, "Någon rad saknar ord (röd ram).", '
-            'IsBlank(lblGlosSprak.Text), "Välj bok eller språk först.", '
-            '!IsBlank(cmbBok.Selected.ID) && IsBlank(cmbKapitel.Selected.ID), "Välj kapitel först.", "")',
-            M_,
-            668,
-            460,
-            24,
-            Color=ROD,
-            Size=10,
-        ),
-        knapp(
-            "btnSparaGlosor",
-            '"Spara " & CountRows(colImport) & " glosor"',
-            M_,
-            694,
-            460,
-            48,
-            SPARA_GLOSOR,
-            DisplayMode=(
-                "If(CountRows(colImport) > 0 && IsBlank(lblImportVarning.Text), DisplayMode.Edit, DisplayMode.Disabled)"
+
+    vanster = kort(
+        "conGlosVal",
+        [
+            # Dold text som håller språkkoden för glosorna som läggs in.
+            text(
+                "txtGlosSprak",
+                f"If({UTAN_BOK}, cmbSprak.Selected.Kod, cmbBok.Selected.Sprak)",
+                Visible="false",
             ),
-        ),
-        # ----- Höger: glosor som redan finns -----
-        rubrik(
-            "lblBefintliga",
-            '"Redan inlagda här (" & CountRows(galBefintliga.AllItems) & ")"',
-            R,
-            76,
-            420,
-        ),
-        label(
-            "lblBefintligaInfo",
-            '"Alla lärare kan fylla på samma kapitel. Ändringar sparas direkt."',
-            R,
-            102,
-            420,
-            24,
-            Color=DAMPAD,
-            Size=10,
-        ),
-        galleri("galBefintliga", BEFINTLIGA, R, 130, 420, 612, 44, bef_rad),
-    ]
-    return "scrGlosor", {"Fill": BG}, kontroller
+            rubrik("txtBok", '"1. Bok"'),
+            kombo(
+                "cmbBok",
+                "Sort(Bocker, Title)",
+                "ThisItem.Title",
+                "Välj bok – tomt = fristående glosor",
+                DefaultSelectedItems="Filter(Bocker, ID = varBokID)",
+                OnChange="Set(varKapitelID, 0);\nReset(cmbKapitel)",
+            ),
+            rad(
+                "conNyBok",
+                [
+                    inmatning("txtNyBok", "Ny bok…", FillPortions=2),
+                    kombo("cmbNyBokSprak", "Sprakval", "ThisItem.Namn", "Språk", FillPortions=1, LayoutMinWidth=110),
+                    knapp("btnNyBok", '"Skapa bok"', SKAPA_BOK, sekundar=True, Width=110),
+                ],
+            ),
+            hjalptext(
+                "txtBokSprak",
+                '"Språk: " & Coalesce(LookUp(Sprakval, Kod = cmbBok.Selected.Sprak).Namn, cmbBok.Selected.Sprak)',
+                Visible=f"!{UTAN_BOK}",
+            ),
+            rubrik("txtKapitel", '"2. Kapitel"'),
+            kombo(
+                "cmbKapitel",
+                "Sort(Filter(Kapitel, BokID = Coalesce(cmbBok.Selected.ID, -1)), Ordning)",
+                "ThisItem.Title",
+                "Välj kapitel",
+                DefaultSelectedItems="Filter(Kapitel, ID = varKapitelID)",
+                DisplayMode=KRAVER_BOK,
+            ),
+            rad(
+                "conNyttKapitel",
+                [
+                    inmatning("txtNyttKapitel", "Nytt kapitel…", FillPortions=1, DisplayMode=KRAVER_BOK),
+                    knapp(
+                        "btnNyttKapitel",
+                        '"Skapa kapitel"',
+                        SKAPA_KAPITEL,
+                        sekundar=True,
+                        Width=130,
+                        DisplayMode=KRAVER_BOK,
+                    ),
+                ],
+            ),
+            rubrik("txtSprak", '"Språk för fristående glosor"', Visible=UTAN_BOK),
+            kombo("cmbSprak", "Sprakval", "ThisItem.Namn", "Välj språk", Visible=UTAN_BOK),
+            behallare(
+                "conTips",
+                "v",
+                [text("txtTips", TIPS, storlek=11, FillPortions=1)],
+                Height=300,
+                Fill="Tema.PrimarLjus",
+                PaddingTop=12,
+                PaddingBottom=12,
+                PaddingLeft=14,
+                PaddingRight=14,
+                RadiusTopLeft=8,
+                RadiusTopRight=8,
+                RadiusBottomLeft=8,
+                RadiusBottomRight=8,
+            ),
+        ],
+        FillPortions=3,
+        LayoutMinWidth=300,
+    )
+
+    mitten = kort(
+        "conGlosImport",
+        [
+            rubrik("txtImportRubrik", '"3. Klistra in glosor – en per rad, tabb mellan orden"'),
+            inmatning(
+                "txtImport",
+                "house ⇥ hus (tabb, ; eller - mellan orden)",
+                Type="TextInputType.Multiline",
+                Height=100,
+            ),
+            rad(
+                "conImportKnappar",
+                [
+                    knapp("btnTolka", '"Lägg till raderna ↓"', TOLKA, FillPortions=1),
+                    knapp("btnByt", '"⇄ Byt plats på språken"', BYT, sekundar=True, FillPortions=1),
+                ],
+            ),
+            rad(
+                "conEnGlosa",
+                [
+                    inmatning("txtMal", "Målspråk, t.ex. la casa", FillPortions=1),
+                    inmatning("txtSv", "Svenska, t.ex. huset", FillPortions=1),
+                    knapp("btnLaggTill", '"+ Lägg till"', LAGG_TILL_EN, Width=110),
+                ],
+            ),
+            rad(
+                "conImportRubriker",
+                [
+                    hjalptext("txtImpRubMal", '"Målspråk"', FillPortions=1),
+                    hjalptext("txtImpRubSv", '"Svenska"', FillPortions=1),
+                    hjalptext("txtImpRubGenus", '"Genus"', Width=120),
+                ],
+                hojd=22,
+            ),
+            galleri("galImport", "colImport", 48, imp_rad),
+            text(
+                "txtImportVarning",
+                'If(CountRows(Filter(colImport, IsBlank(Trim(Svenska)) || IsBlank(Trim(Mal)))) > 0, "Någon rad saknar ord.", '
+                'IsBlank(txtGlosSprak.Text), "Välj bok eller språk först.", '
+                f'!{UTAN_BOK} && IsBlank(cmbKapitel.Selected.ID), "Välj kapitel först.", "")',
+                hojd=22,
+                storlek=10,
+                farg="Tema.Fel",
+            ),
+            knapp(
+                "btnSparaGlosor",
+                '"Spara " & CountRows(colImport) & " glosor"',
+                SPARA_GLOSOR,
+                Height=48,
+                DisplayMode="If(CountRows(colImport) > 0 && IsBlank(txtImportVarning.Text), DisplayMode.Edit, DisplayMode.Disabled)",
+            ),
+        ],
+        FillPortions=4,
+        LayoutMinWidth=380,
+    )
+
+    hoger = kort(
+        "conGlosBefintliga",
+        [
+            rubrik("txtBefintliga", '"Redan inlagda här (" & CountRows(galBefintliga.AllItems) & ")"'),
+            hjalptext("txtBefintligaInfo", '"Alla lärare kan fylla på samma kapitel. Ändringar sparas direkt."'),
+            galleri("galBefintliga", BEFINTLIGA, 48, bef_rad),
+        ],
+        FillPortions=3,
+        LayoutMinWidth=320,
+    )
+
+    innehall = kropp("conGlosKropp", [vanster, mitten, hoger])
+    return "scrGlosor", {"Fill": "Tema.Bakgrund"}, [skarm("Glos", '"Lägg in glosor"', innehall)]
 
 
-# ---------- Skärm: Skapa / redigera gloslista ----------
-
-VALD_POST = "{ ID: %s.ID, Title: %s.Title, Svenska: %s.Svenska, Genus: %s.Genus, Sprak: %s.Sprak }"
+# ---------- Skärm 3: Skapa / redigera gloslista ----------
 
 
 def vald_post(x):
-    return VALD_POST % (x, x, x, x, x)
+    return f"{{ ID: {x}.ID, Title: {x}.Title, Svenska: {x}.Svenska, Genus: {x}.Genus, Sprak: {x}.Sprak }}"
 
 
 KALLA = """If(
-    chkFristaende.Value,
+    chkFristaende.Checked,
     Filter(Glosor, BokID = 0, Sprak = cmbLSprak.Selected.Kod),
     Filter(Glosor, KapitelID = Coalesce(cmbLKapitel.Selected.ID, -1))
 )"""
@@ -732,8 +762,8 @@ SPARA_LISTA = """If(
             Gloslistor,
             Defaults(Gloslistor),
             {
-                Title: Trim(txtListNamn.Text),
-                Beskrivning: txtListBeskr.Text,
+                Title: Trim(txtListNamn.Value),
+                Beskrivning: txtListBeskr.Value,
                 Sprak: First(colValda).Sprak,
                 LarareNamn: User().FullName,
                 LarareEpost: User().Email,
@@ -748,8 +778,8 @@ SPARA_LISTA = """If(
             Gloslistor,
             LookUp(Gloslistor, ID = varRedigeraLista.ID),
             {
-                Title: Trim(txtListNamn.Text),
-                Beskrivning: txtListBeskr.Text,
+                Title: Trim(txtListNamn.Value),
+                Beskrivning: txtListBeskr.Value,
                 Sprak: First(colValda).Sprak,
                 GlosaIDs: Concat(colValda, Text(ID), ";")
             }
@@ -765,228 +795,179 @@ If(
 
 
 def skarm_ny_lista():
-    L, R = 20, 690
+    w = "Parent.TemplateWidth"
     kalla_rad = [
-        kryssruta(
+        kryss(
             "chkGlosa",
             '""',
-            8,
-            6,
-            40,
-            32,
-            Default="!IsBlank(LookUp(colValda, ID = ThisItem.ID))",
+            Checked="!IsBlank(LookUp(colValda, ID = ThisItem.ID))",
             OnCheck=f"If(IsBlank(LookUp(colValda, ID = ThisItem.ID)), Collect(colValda, {vald_post('ThisItem')}))",
             OnUncheck="RemoveIf(colValda, ID = ThisItem.ID)",
+            **pos(8, 6, 40, 36),
         ),
-        label(
-            "lblKMal",
+        text(
+            "txtKMal",
             "ThisItem.Title",
-            50,
-            0,
-            285,
-            44,
-            Color=genusfarg("ThisItem.Genus"),
-            FontWeight="FontWeight.Semibold",
+            fet=True,
+            farg=genusfarg("ThisItem.Genus"),
+            **pos(52, 10, f"({w} - 60) / 2", 28),
         ),
-        label("lblKSv", "ThisItem.Svenska", 340, 0, 290, 44),
-        rad_separator("rectKLinje", "Parent.TemplateWidth"),
+        text("txtKSv", "ThisItem.Svenska", **pos(f"56 + ({w} - 60) / 2", 10, f"({w} - 60) / 2", 28)),
+        avdelare("rectKLinje"),
     ]
     vald_rad = [
-        label(
-            "lblVMal",
+        text(
+            "txtVMal",
             "ThisItem.Title",
-            12,
-            0,
-            290,
-            40,
-            Color=genusfarg("ThisItem.Genus"),
-            FontWeight="FontWeight.Semibold",
+            fet=True,
+            farg=genusfarg("ThisItem.Genus"),
+            **pos(8, 8, f"({w} - 60) / 2", 28),
         ),
-        label("lblVSv", "ThisItem.Svenska", 310, 0, 280, 40),
-        knapp(
-            "btnVTaBort",
-            '"✕"',
-            600,
-            4,
-            32,
-            32,
-            "RemoveIf(colValda, ID = ThisItem.ID)",
-            sekundar=True,
-            BorderThickness=0,
-            Color=ROD,
-            HoverColor=ROD,
-        ),
-        rad_separator("rectVLinje", "Parent.TemplateWidth"),
+        text("txtVSv", "ThisItem.Svenska", **pos(f"12 + ({w} - 60) / 2", 8, f"({w} - 60) / 2", 28)),
+        taBortKnapp("btnVTaBort", "RemoveIf(colValda, ID = ThisItem.ID)", **pos(f"{w} - 42", 4, 38, 36)),
+        avdelare("rectVLinje"),
     ]
     lank = 'WebbAdress & "?lista=" & varSparadLista.ID'
-    kontroller = [
-        *sidhuvud("NyL", 'If(IsBlank(varRedigeraLista), "Skapa gloslista", "Redigera gloslista")'),
-        # ----- Vänster: välj glosor -----
-        rubrik("lblNyLSteg1", '"1. Välj glosor"', L, 72, 640),
-        kombobox(
-            "cmbLBok",
-            "Sort(Bocker, Title)",
-            "Title",
-            L,
-            102,
-            315,
-            platshallare="Bok",
-            OnChange="Reset(cmbLKapitel)",
-            DisplayMode="If(chkFristaende.Value, DisplayMode.Disabled, DisplayMode.Edit)",
-        ),
-        kombobox(
-            "cmbLKapitel",
-            "Sort(Filter(Kapitel, BokID = Coalesce(cmbLBok.Selected.ID, -1)), Ordning)",
-            "Title",
-            L + 325,
-            102,
-            315,
-            platshallare="Kapitel",
-            DisplayMode="If(chkFristaende.Value, DisplayMode.Disabled, DisplayMode.Edit)",
-        ),
-        kryssruta("chkFristaende", '"Visa fristående glosor (utan bok)"', L, 150, 315, 36),
-        kombobox(
-            "cmbLSprak",
-            "Sprakval",
-            "Namn",
-            L + 325,
-            150,
-            315,
-            h=36,
-            platshallare="Språk",
-            Visible="chkFristaende.Value",
-        ),
-        knapp(
-            "btnMarkeraAlla",
-            '"Markera alla"',
-            L,
-            196,
-            150,
-            36,
-            f"Collect(colValda, ForAll(Filter(galKalla.AllItems, !(ID in colValda.ID)) As g, {vald_post('g')}))",
-            sekundar=True,
-            Size=11,
-        ),
-        knapp(
-            "btnAvmarkeraAlla",
-            '"Avmarkera alla"',
-            L + 160,
-            196,
-            150,
-            36,
-            "RemoveIf(colValda, ID in galKalla.AllItems.ID)",
-            sekundar=True,
-            Size=11,
-        ),
-        galleri("galKalla", KALLA, L, 240, 640, 330, 44, kalla_rad),
-        rubrik("lblNyLListor", '"…eller slå ihop befintliga gloslistor"', L, 584, 640),
-        kombobox(
-            "cmbListor",
-            "Sort(Gloslistor, Title)",
-            "Title",
-            L,
-            614,
-            470,
-            platshallare="Välj en eller flera listor",
-            flera=True,
-        ),
-        knapp(
-            "btnLaggTillListor",
-            '"Lägg till glosorna"',
-            L + 480,
-            614,
-            160,
-            40,
-            LAGG_TILL_LISTOR,
-            sekundar=True,
-            Size=11,
-        ),
-        label(
-            "lblNyLListorInfo",
-            '"Glosorna återanvänds – inget dupliceras. Samma glosa läggs bara till en gång."',
-            L,
-            660,
-            640,
-            26,
-            Color=DAMPAD,
-            Size=10,
-        ),
-        # ----- Höger: listan -----
-        rubrik("lblNyLSteg2", '"2. Din gloslista"', R, 72, 656),
-        textruta(
-            "txtListNamn",
-            R,
-            102,
-            656,
-            40,
-            hint="Namn, t.ex. Kapitel 3 glosor",
-            default="If(IsBlank(varRedigeraLista), varMallNamn, varRedigeraLista.Title)",
-        ),
-        textruta(
-            "txtListBeskr",
-            R,
-            148,
-            656,
-            40,
-            hint="Beskrivning (valfri), t.ex. Prov fredag v. 12",
-            default='If(IsBlank(varRedigeraLista), "", varRedigeraLista.Beskrivning)',
-        ),
-        rubrik("lblValda", '"Valda glosor (" & CountRows(colValda) & ")"', R, 196, 500),
-        knapp(
-            "btnTomLista",
-            '"Töm"',
-            "Parent.Width - 120",
-            194,
-            100,
-            32,
-            "Clear(colValda)",
-            sekundar=True,
-            Size=10,
-        ),
-        galleri("galValda", "colValda", R, 232, 656, 350, 40, vald_rad),
-        knapp(
-            "btnSparaLista",
-            'If(IsBlank(varRedigeraLista), "Spara gloslista", "Spara ändringar")',
-            R,
-            594,
-            300,
-            48,
-            SPARA_LISTA,
-            DisplayMode=(
-                "If(CountRows(colValda) > 0 && !IsBlank(Trim(txtListNamn.Text)), DisplayMode.Edit, DisplayMode.Disabled)"
+    fristaende = "chkFristaende.Checked"
+    ej_fristaende = f"If({fristaende}, DisplayMode.Disabled, DisplayMode.Edit)"
+
+    vanster = kort(
+        "conNyLKalla",
+        [
+            rubrik("txtNyLSteg1", '"1. Välj glosor"'),
+            rad(
+                "conNyLBokKapitel",
+                [
+                    kombo(
+                        "cmbLBok",
+                        "Sort(Bocker, Title)",
+                        "ThisItem.Title",
+                        "Bok",
+                        FillPortions=1,
+                        OnChange="Reset(cmbLKapitel)",
+                        DisplayMode=ej_fristaende,
+                    ),
+                    kombo(
+                        "cmbLKapitel",
+                        "Sort(Filter(Kapitel, BokID = Coalesce(cmbLBok.Selected.ID, -1)), Ordning)",
+                        "ThisItem.Title",
+                        "Kapitel",
+                        FillPortions=1,
+                        DisplayMode=ej_fristaende,
+                    ),
+                ],
             ),
-        ),
-        label(
-            "lblLank",
-            '"Länk till eleverna: " & ' + lank,
-            R,
-            652,
-            "Parent.Width - 860",
-            40,
-            Size=11,
-            Color=ACCENT,
-            Visible="!IsBlank(varSparadLista)",
-        ),
-        knapp(
-            "btnKopieraLank",
-            '"Kopiera länk"',
-            "Parent.Width - 160",
-            652,
-            140,
-            40,
-            f'Copy({lank});\nNotify("Länken är kopierad.", NotificationType.Success)',
-            sekundar=True,
-            Visible="!IsBlank(varSparadLista)",
-        ),
-    ]
+            rad(
+                "conNyLFristaende",
+                [
+                    kryss("chkFristaende", '"Fristående glosor (utan bok)"', FillPortions=1),
+                    kombo("cmbLSprak", "Sprakval", "ThisItem.Namn", "Språk", FillPortions=1, Visible=fristaende),
+                ],
+            ),
+            rad(
+                "conNyLMarkera",
+                [
+                    knapp(
+                        "btnMarkeraAlla",
+                        '"Markera alla"',
+                        f"Collect(colValda, ForAll(Filter(galKalla.AllItems, !(ID in colValda.ID)) As g, {vald_post('g')}))",
+                        sekundar=True,
+                        Width=150,
+                    ),
+                    knapp(
+                        "btnAvmarkeraAlla",
+                        '"Avmarkera alla"',
+                        "RemoveIf(colValda, ID in galKalla.AllItems.ID)",
+                        sekundar=True,
+                        Width=150,
+                    ),
+                ],
+            ),
+            galleri("galKalla", KALLA, 48, kalla_rad),
+            rubrik("txtNyLListor", '"…eller slå ihop befintliga gloslistor"'),
+            rad(
+                "conNyLListor",
+                [
+                    kombo(
+                        "cmbListor",
+                        "Sort(Gloslistor, Title)",
+                        "ThisItem.Title",
+                        "Välj en eller flera listor",
+                        flera=True,
+                        FillPortions=1,
+                    ),
+                    knapp("btnLaggTillListor", '"Lägg till glosorna"', LAGG_TILL_LISTOR, sekundar=True, Width=170),
+                ],
+            ),
+            hjalptext(
+                "txtNyLListorInfo",
+                '"Glosorna återanvänds – inget dupliceras. Samma glosa läggs bara till en gång."',
+            ),
+        ],
+        FillPortions=1,
+        LayoutMinWidth=420,
+    )
+
+    hoger = kort(
+        "conNyLLista",
+        [
+            rubrik("txtNyLSteg2", '"2. Din gloslista"'),
+            inmatning(
+                "txtListNamn",
+                "Namn, t.ex. Kapitel 3 glosor",
+                varde="If(IsBlank(varRedigeraLista), varMallNamn, varRedigeraLista.Title)",
+            ),
+            inmatning(
+                "txtListBeskr",
+                "Beskrivning (valfri), t.ex. Prov fredag v. 12",
+                varde='If(IsBlank(varRedigeraLista), "", varRedigeraLista.Beskrivning)',
+            ),
+            rad(
+                "conNyLValdaRubrik",
+                [
+                    rubrik("txtValda", '"Valda glosor (" & CountRows(colValda) & ")"', FillPortions=1),
+                    knapp("btnTomLista", '"Töm"', "Clear(colValda)", sekundar=True, Width=90),
+                ],
+            ),
+            galleri("galValda", "colValda", 44, vald_rad),
+            knapp(
+                "btnSparaLista",
+                'If(IsBlank(varRedigeraLista), "Spara gloslista", "Spara ändringar")',
+                SPARA_LISTA,
+                Height=48,
+                DisplayMode="If(CountRows(colValda) > 0 && !IsBlank(Trim(txtListNamn.Value)), DisplayMode.Edit, DisplayMode.Disabled)",
+            ),
+            rad(
+                "conNyLLank",
+                [
+                    text("txtLank", '"Länk till eleverna: " & ' + lank, hojd=40, farg="Tema.Primar", FillPortions=1),
+                    knapp(
+                        "btnKopieraLank",
+                        '"Kopiera länk"',
+                        f'Copy({lank});\nNotify("Länken är kopierad.", NotificationType.Success)',
+                        sekundar=True,
+                        Width=140,
+                    ),
+                ],
+                Visible="!IsBlank(varSparadLista)",
+            ),
+        ],
+        FillPortions=1,
+        LayoutMinWidth=420,
+    )
+
+    innehall = kropp("conNyLKropp", [vanster, hoger])
     return (
         "scrNyLista",
-        {"Fill": BG, "OnVisible": "Set(varSparadLista, varRedigeraLista);\nReset(txtListNamn);\nReset(txtListBeskr)"},
-        kontroller,
+        {
+            "Fill": "Tema.Bakgrund",
+            "OnVisible": "Set(varSparadLista, varRedigeraLista);\nReset(txtListNamn);\nReset(txtListBeskr)",
+        },
+        [skarm("NyL", 'If(IsBlank(varRedigeraLista), "Skapa gloslista", "Redigera gloslista")', innehall)],
     )
 
 
-# ---------- Skärm: Gloslistor ----------
+# ---------- Skärm 4: Gloslistor ----------
 
 LADDA_VALDA = """Clear(colValda);
 ForAll(
@@ -1002,161 +983,185 @@ ForAll(
 
 
 def skarm_listor():
+    w = "Parent.TemplateWidth"
     egen = "ThisItem.LarareEpost = User().Email"
     antal = 'CountRows(Filter(Split(ThisItem.GlosaIDs, ";"), !IsBlank(Trim(Value))))'
     lank = 'WebbAdress & "?lista=" & ThisItem.ID'
-    rad = [
-        label(
-            "lblLTitel",
+    textbredd = f"Max(200, {w} - 720)"
+    rad_ = [
+        text(
+            "txtLTitel",
             "ThisItem.Title",
-            20,
-            10,
-            "Parent.TemplateWidth - 720",
-            30,
-            Size=14,
-            FontWeight="FontWeight.Bold",
-            Color=f"If(ThisItem.Aktiv, {TEXT}, {DAMPAD})",
+            storlek=14,
+            fet="FontWeight.Bold",
+            farg="If(ThisItem.Aktiv, Tema.Brodtext, Tema.TextDampad)",
+            **pos(16, 10, textbredd, 30),
         ),
-        label(
-            "lblLMeta",
+        text(
+            "txtLMeta",
             f'ThisItem.LarareNamn & " · " & {antal} & " glosor · " & '
-            f'Coalesce(LookUp(Sprakval, Kod = ThisItem.Sprak).Namn, ThisItem.Sprak) & '
-            f'If(ThisItem.Aktiv, "", " · DOLD för eleverna")'
-            f' & If(IsBlank(ThisItem.Beskrivning), "", " · " & ThisItem.Beskrivning)',
-            20,
-            40,
-            "Parent.TemplateWidth - 720",
-            24,
-            Color=DAMPAD,
-            Size=11,
+            "Coalesce(LookUp(Sprakval, Kod = ThisItem.Sprak).Namn, ThisItem.Sprak) & "
+            'If(ThisItem.Aktiv, "", " · DOLD för eleverna")'
+            ' & If(IsBlank(ThisItem.Beskrivning), "", " · " & ThisItem.Beskrivning)',
+            storlek=11,
+            farg="Tema.TextDampad",
+            **pos(16, 40, textbredd, 24),
         ),
-        label("lblLLank", lank, 20, 64, "Parent.TemplateWidth - 720", 22, Color=ACCENT, Size=10),
+        text("txtLLank", lank, storlek=10, farg="Tema.Primar", **pos(16, 64, textbredd, 22)),
         knapp(
             "btnLKopiera",
             '"Kopiera länk"',
-            "Parent.TemplateWidth - 690",
-            24,
-            125,
-            40,
             f'Copy({lank});\nNotify("Länken är kopierad.", NotificationType.Success)',
             sekundar=True,
-            Size=10,
+            **pos(f"{w} - 690", 26, 125, 40),
         ),
         knapp(
             "btnLRedigera",
             '"Redigera"',
-            "Parent.TemplateWidth - 555",
-            24,
-            105,
-            40,
             LADDA_VALDA + "\nSet(varRedigeraLista, ThisItem);\nNavigate(scrNyLista, ScreenTransition.None)",
             sekundar=True,
-            Size=10,
             Visible=egen,
+            **pos(f"{w} - 555", 26, 105, 40),
         ),
         knapp(
             "btnLMall",
             '"Använd som mall"',
-            "Parent.TemplateWidth - 440",
-            24,
-            140,
-            40,
             LADDA_VALDA
             + '\nSet(varRedigeraLista, Blank());\nSet(varMallNamn, "Kopia av " & ThisItem.Title);\n'
             "Navigate(scrNyLista, ScreenTransition.None)",
             sekundar=True,
-            Size=10,
+            **pos(f"{w} - 440", 26, 140, 40),
         ),
         knapp(
             "btnLAktiv",
             'If(ThisItem.Aktiv, "Dölj", "Visa")',
-            "Parent.TemplateWidth - 290",
-            24,
-            90,
-            40,
             "Patch(Gloslistor, ThisItem, { Aktiv: !ThisItem.Aktiv })",
             sekundar=True,
-            Size=10,
             Visible=egen,
-            Tooltip='"Dolda listor syns inte för eleverna"',
+            **pos(f"{w} - 290", 26, 90, 40),
         ),
         knapp(
             "btnLTaBort",
             'If(varTaBortID = ThisItem.ID, "Bekräfta!", "Ta bort")',
-            "Parent.TemplateWidth - 190",
-            24,
-            170,
-            40,
             "If(\n    varTaBortID = ThisItem.ID,\n    Remove(Gloslistor, ThisItem);\n    Set(varTaBortID, 0),\n"
             "    Set(varTaBortID, ThisItem.ID)\n)",
-            sekundar=True,
-            Size=10,
-            Color=ROD,
-            HoverColor=ROD,
-            BorderColor=ROD,
+            Appearance='If(varTaBortID = ThisItem.ID, ButtonAppearance.Primary, ButtonAppearance.Secondary)',
+            BasePaletteColor="Tema.Fel",
             Visible=egen,
+            **pos(f"{w} - 190", 26, 170, 40),
         ),
-        rad_separator("rectLLinje", "Parent.TemplateWidth"),
+        avdelare("rectLLinje"),
     ]
-    kontroller = [
-        *sidhuvud("Lis", '"Gloslistor"'),
-        kryssruta("chkAllaListor", '"Visa alla lärares listor"', 20, 76, 320, 36),
-        knapp(
-            "btnLisNy",
-            '"+ Ny gloslista"',
-            "Parent.Width - 200",
-            74,
-            180,
-            40,
-            'Set(varRedigeraLista, Blank());\nSet(varMallNamn, "");\nClear(colValda);\nNavigate(scrNyLista, ScreenTransition.None)',
-        ),
-        galleri(
-            "galListor",
-            "Sort(\n    If(chkAllaListor.Value, Gloslistor, Filter(Gloslistor, LarareEpost = User().Email)),\n"
-            "    ID,\n    SortOrder.Descending\n)",
-            20,
-            124,
-            "Parent.Width - 40",
-            "Parent.Height - 144",
-            92,
-            rad,
-        ),
+    innehall = kropp(
+        "conLisKropp",
+        [
+            rad(
+                "conLisVerktyg",
+                [
+                    kryss("chkAllaListor", '"Visa alla lärares listor"', FillPortions=1),
+                    knapp(
+                        "btnLisNy",
+                        '"+ Ny gloslista"',
+                        'Set(varRedigeraLista, Blank());\nSet(varMallNamn, "");\nClear(colValda);\n'
+                        "Navigate(scrNyLista, ScreenTransition.None)",
+                        Width=180,
+                    ),
+                ],
+                LayoutAlignItems="LayoutAlignItems.Center",
+            ),
+            kort(
+                "conLisLista",
+                [
+                    galleri(
+                        "galListor",
+                        "Sort(\n    If(chkAllaListor.Checked, Gloslistor, Filter(Gloslistor, LarareEpost = User().Email)),\n"
+                        "    ID,\n    SortOrder.Descending\n)",
+                        92,
+                        rad_,
+                    )
+                ],
+                FillPortions=1,
+                PaddingTop=4,
+                PaddingBottom=4,
+            ),
+        ],
+        riktning="v",
+    )
+    return "scrListor", {"Fill": "Tema.Bakgrund", "OnVisible": "Set(varTaBortID, 0)"}, [
+        skarm("Lis", '"Gloslistor"', innehall)
     ]
-    return "scrListor", {"Fill": BG, "OnVisible": "Set(varTaBortID, 0)"}, kontroller
+
+
+# ---------- App.Formulas ----------
+
+
+def app_formulas():
+    r = [
+        "// Klistra in i App → egenskapen Formulas (välj App i trädvyn, sedan Formulas i listan uppe till vänster).",
+        "",
+        "// Adressen till elevernas övningssida. Används för länkarna till gloslistorna.",
+        'WebbAdress = "https://fjellandermedia.github.io/glosor/";',
+        "",
+        "// Färgschemat. Alla färger i appen hämtas härifrån – ändra en färgkod så ändras hela appen.",
+        "Tema = {",
+    ]
+    for i, (namn, hex_, beskr) in enumerate(TEMA):
+        komma = "," if i < len(TEMA) - 1 else ""
+        r.append(f'    {namn}: ColorValue("{hex_}"){komma}    // {beskr}')
+    r += ["};", "", "Sprakval = Table("]
+    for i, (kod, namn) in enumerate(SPRAKVAL):
+        komma = "," if i < len(SPRAKVAL) - 1 else ""
+        r.append(f'    {{ Kod: "{kod}", Namn: "{namn}" }}{komma}')
+    r += [
+        ");",
+        "",
+        "// Förslag på genus utifrån språk och artikel. m = maskulinum, f = femininum, n = neutrum.",
+        "GenusArtiklar = Table(",
+    ]
+    poster = []
+    for sprak, m, f, n in GENUS_ARTIKLAR:
+        for genus, artiklar in (("m", m), ("f", f), ("n", n)):
+            for a in artiklar:
+                poster.append(f'    {{ Sprak: "{sprak}", Artikel: "{a}", Genus: "{genus}" }}')
+    r += [p + ("," if i < len(poster) - 1 else "") for i, p in enumerate(poster)]
+    r += [");"]
+    return "\n".join(r) + "\n"
+
+
+def till_svensk_syntax(kod):
+    """, -> ; och ; -> ;; utanför kommentarer och textsträngar."""
+    ut = []
+    for rad_ in kod.split("\n"):
+        if rad_.lstrip().startswith("//"):
+            ut.append(rad_)
+            continue
+        kodbit, sep, kommentar = rad_.partition("    //")
+        delar = re.split(r'("(?:[^"]|"")*")', kodbit)
+        for i in range(0, len(delar), 2):
+            delar[i] = delar[i].replace(";", ";;").replace(",", ";")
+        ut.append("".join(delar) + sep + kommentar)
+    return "\n".join(ut)
 
 
 # ---------- YAML-utskrift ----------
 
-
-# Namnen på SharePoint-listorna (datakällorna i Power Apps).
-# Formlerna ovan skrivs med de korta namnen till vänster. De byts ut mot namnen till höger
-# överallt utom inuti textsträngar ("...").
-DATAKALLOR = {
-    "Bocker": "glosor_bocker",
-    "Kapitel": "glosor_kapitel",
-    "Glosor": "glosor_glosor",
-    "Gloslistor": "glosor_gloslistor",
-}
 _STRANG = re.compile(r'"(?:[^"]|"")*"')
 _KALLA = re.compile(r"\b(" + "|".join(DATAKALLOR) + r")\b")
 
 
 def byt_datakallor(formel):
     delar = []
-    pos = 0
+    pos_ = 0
     for m in _STRANG.finditer(formel):
-        delar.append(_KALLA.sub(lambda x: DATAKALLOR[x.group(1)], formel[pos : m.start()]))
+        delar.append(_KALLA.sub(lambda x: DATAKALLOR[x.group(1)], formel[pos_ : m.start()]))
         delar.append(m.group(0))
-        pos = m.end()
-    delar.append(_KALLA.sub(lambda x: DATAKALLOR[x.group(1)], formel[pos:]))
+        pos_ = m.end()
+    delar.append(_KALLA.sub(lambda x: DATAKALLOR[x.group(1)], formel[pos_:]))
     return "".join(delar)
 
 
 def varde(v):
-    """Formel -> YAML-värde. Allt skrivs som Power Fx-formel (=...)."""
-    if isinstance(v, (int, float)):
-        return f"={v}"
-    return "=" + byt_datakallor(v)
+    return "=" + byt_datakallor(str(v))
 
 
 def skriv_varde(rader, nyckel, v, indrag):
@@ -1204,18 +1209,20 @@ def skriv_kontroller(kontroller):
 
 def kontrollera_unika(skarmar):
     sedda = {}
-    def gå(k, skarm):
+
+    def ga(k, skarm_):
         if k["namn"] in sedda:
-            raise SystemExit(f"Dubbelt kontrollnamn: {k['namn']} ({skarm} och {sedda[k['namn']]})")
-        sedda[k["namn"]] = skarm
+            raise SystemExit(f"Dubbelt kontrollnamn: {k['namn']} ({skarm_} och {sedda[k['namn']]})")
+        sedda[k["namn"]] = skarm_
         for b in k["children"]:
-            gå(b, skarm)
+            ga(b, skarm_)
+
     for namn, _, kontroller in skarmar:
         if namn in sedda:
             raise SystemExit(f"Dubbelt namn: {namn}")
         sedda[namn] = namn
         for k in kontroller:
-            gå(k, namn)
+            ga(k, namn)
 
 
 def main():
@@ -1227,6 +1234,15 @@ def main():
         fil.write_text(skriv_skarm(namn, props, kontroller), encoding="utf-8")
         (UT / "kontroller" / f"{i}-{namn}.yaml").write_text(skriv_kontroller(kontroller), encoding="utf-8")
         print("skrev", fil.relative_to(ROT))
+    formler = app_formulas()
+    (UT / "App.Formulas.txt").write_text(formler, encoding="utf-8")
+    sv = (
+        "// Svensk version: semikolon mellan argument och dubbelsemikolon mellan formlerna.\n"
+        "// Använd den här om Power Apps Studio är på svenska. Annars: App.Formulas.txt.\n"
+        + till_svensk_syntax(formler)
+    )
+    (UT / "App.Formulas.sv.txt").write_text(sv, encoding="utf-8")
+    print("skrev powerapps/App.Formulas.txt och App.Formulas.sv.txt")
 
 
 if __name__ == "__main__":

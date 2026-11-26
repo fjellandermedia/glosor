@@ -1,6 +1,7 @@
 # 3. Lärarappen i Power Apps
 
-Appen är en arbetsyteapp (canvas app) med fyra skärmar:
+Appen är en arbetsyteapp (canvas app) med fyra skärmar. Den använder **moderna kontroller** och **containrar med automatisk layout**,
+så att den anpassar sig efter fönstrets storlek. Alla färger hämtas från den namngivna formeln `Tema` (se [Färgschema](#färgschema)).
 
 | Skärm | Fil | Gör |
 | --- | --- | --- |
@@ -12,6 +13,8 @@ Appen är en arbetsyteapp (canvas app) med fyra skärmar:
 ## Steg för steg
 
 1. **Skapa appen.** *make.powerapps.com → Skapa → Tom app → Tom arbetsyteapp*, format **Surfplatta**.
+   - *Inställningar → Uppdateringar*: slå på **Moderna kontroller och teman**.
+   - *Inställningar → Visning*: stäng av **Skala för att passa**. Då följer skärmarna fönstrets storlek och layouten blir responsiv.
 2. **Lägg till data.** *Data → Lägg till data → SharePoint →* din webbplats → bocka för `glosor_bocker`, `glosor_kapitel`, `glosor_glosor` och `glosor_gloslistor`.
    Heter listorna något annat hos er, ändra `DATAKALLOR` överst i utskriftsdelen av [`tools/generera_powerapps.py`](../tools/generera_powerapps.py) och generera om filerna.
    Gör detta **innan** du klistrar in skärmarna, annars blir formlerna röda.
@@ -29,7 +32,7 @@ Appen är en arbetsyteapp (canvas app) med fyra skärmar:
 Vissa versioner av Studio tar bara emot kontroller, inte hela skärmar. Gör då så här för varje skärm:
 
 1. Lägg till en tom skärm och döp om den till exakt namnet ovan, till exempel `scrGlosor`.
-2. Sätt skärmens **Fill** till `RGBA(244, 246, 251, 1)` och, för `scrNyLista` och `scrListor`, egenskapen **OnVisible**. Den står överst i skärmens YAML-fil.
+2. Sätt skärmens **Fill** till `Tema.Bakgrund` och, för `scrNyLista` och `scrListor`, egenskapen **OnVisible**. Den står överst i skärmens YAML-fil.
 3. Kopiera motsvarande fil i [`powerapps/kontroller/`](../powerapps/kontroller). Högerklicka på skärmen i trädvyn → **Klistra in kod**.
 
 ### Svenska eller engelska formler?
@@ -38,6 +41,32 @@ YAML-koden använder engelsk formelsyntax (`,` mellan argument och `;` mellan fo
 Om Power Apps är på svenska skriver du formler för hand med `;` mellan argument och `;;` mellan formler.
 För `App.Formulas` finns en färdig svensk version: [`App.Formulas.sv.txt`](../powerapps/App.Formulas.sv.txt).
 Det enklaste är att tillfälligt byta Power Apps till engelska (kugghjulet → Språk) medan du bygger.
+
+## Färgschema
+
+Överst i `App.Formulas` finns:
+
+```
+Tema = {
+    Primar: ColorValue("#2F5BD3"),      // knappar, sidhuvud, länkar
+    PrimarLjus: ColorValue("#E7EDFC"),  // tipsruta
+    Bakgrund: ColorValue("#F4F6FB"),    // skärmarnas bakgrund
+    Yta: ColorValue("#FFFFFF"),         // kort/paneler
+    ...
+    GenusF: ColorValue("#D32F2F"),      // femininum
+    GenusM: ColorValue("#1F5FD1"),      // maskulinum
+    GenusN: ColorValue("#168A3D")       // neutrum
+};
+```
+
+Ändra en färgkod där, så ändras färgen i hela appen. Knapparna får sin färg via `BasePaletteColor: =Tema.Primar`.
+Textrutor och kombinationsrutor följer appens tema (*Teman* i vänstermenyn). Välj gärna ett tema med ungefär samma blå som `Tema.Primar`.
+
+## Layout
+
+Varje skärm är en lodrät container som fyller skärmen: sidhuvud överst, sedan innehållet.
+Innehållet består av vita kort (containrar) som delar på bredden med *FillPortions* och har en minsta bredd (*LayoutMinWidth*).
+Raderna i gallerierna placeras i förhållande till galleriets bredd (`Parent.TemplateWidth`). Allt växer och krymper alltså med fönstret.
 
 ## Så fungerar det för lärarna
 
