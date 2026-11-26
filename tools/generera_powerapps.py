@@ -172,7 +172,7 @@ def knapp(namn, txt, onselect, sekundar=False, **p):
 
 
 def inmatning(namn, platshallare="", varde='""', **p):
-    props = {"Value": varde, "Placeholder": f'"{platshallare}"', "Height": 40}
+    props = {"Default": varde, "Placeholder": f'"{platshallare}"', "Height": 40}
     props.update(p)
     return ctl(namn, INMATNING, props)
 
@@ -182,7 +182,7 @@ def kombo(namn, items, visa, platshallare="", flera=False, **p):
         "Items": items,
         "ItemDisplayText": visa,
         "SelectMultiple": "true" if flera else "false",
-        "Placeholder": f'"{platshallare}"',
+        "InputTextPlaceholder": f'"{platshallare}"',
         "Height": 40,
     }
     props.update(p)
@@ -354,7 +354,7 @@ TIPS = (
 TOLKA = """With(
     {
         rader: Filter(
-            Split(Substitute(txtImport.Value, Char(13), ""), Char(10)),
+            Split(Substitute(txtImport.Text, Char(13), ""), Char(10)),
             !IsBlank(Trim(Value))
         ),
         start: Coalesce(Max(colImport, Nr), 0),
@@ -396,20 +396,20 @@ TOLKA = """With(
 Reset(txtImport)""".replace("%GENUS%", genusforslag("mal", "valtSprak"))
 
 LAGG_TILL_EN = """If(
-    !IsBlank(Trim(txtMal.Value)),
+    !IsBlank(Trim(txtMal.Text)),
     Collect(
         colImport,
         {
             Nr: Coalesce(Max(colImport, Nr), 0) + 1,
-            Mal: Trim(txtMal.Value),
-            Svenska: Trim(txtSv.Value),
+            Mal: Trim(txtMal.Text),
+            Svenska: Trim(txtSv.Text),
             Genus: %GENUS%
         }
     );
     Reset(txtMal);
     Reset(txtSv);
     SetFocus(txtMal)
-)""".replace("%GENUS%", genusforslag("txtMal.Value", "txtGlosSprak.Text"))
+)""".replace("%GENUS%", genusforslag("txtMal.Text", "txtGlosSprak.Text"))
 
 BYT = """ClearCollect(colImportTmp, colImport);
 ClearCollect(
@@ -458,10 +458,10 @@ SPARA_GLOSOR = """With(
 )"""
 
 SKAPA_BOK = """If(
-    !IsBlank(Trim(txtNyBok.Value)) && !IsBlank(cmbNyBokSprak.Selected.Kod),
+    !IsBlank(Trim(txtNyBok.Text)) && !IsBlank(cmbNyBokSprak.Selected.Kod),
     Set(
         varBokID,
-        Patch(Bocker, Defaults(Bocker), { Title: Trim(txtNyBok.Value), Sprak: cmbNyBokSprak.Selected.Kod }).ID
+        Patch(Bocker, Defaults(Bocker), { Title: Trim(txtNyBok.Text), Sprak: cmbNyBokSprak.Selected.Kod }).ID
     );
     Set(varKapitelID, 0);
     Reset(txtNyBok);
@@ -472,14 +472,14 @@ SKAPA_BOK = """If(
 )"""
 
 SKAPA_KAPITEL = """If(
-    !IsBlank(Trim(txtNyttKapitel.Value)) && !IsBlank(cmbBok.Selected.ID),
+    !IsBlank(Trim(txtNyttKapitel.Text)) && !IsBlank(cmbBok.Selected.ID),
     Set(
         varKapitelID,
         Patch(
             Kapitel,
             Defaults(Kapitel),
             {
-                Title: Trim(txtNyttKapitel.Value),
+                Title: Trim(txtNyttKapitel.Text),
                 BokID: cmbBok.Selected.ID,
                 Ordning: Coalesce(
                     First(Sort(Filter(Kapitel, BokID = cmbBok.Selected.ID), Ordning, SortOrder.Descending)).Ordning,
@@ -528,13 +528,13 @@ def skarm_glosor():
             "txtRadMal",
             varde="ThisItem.Mal",
             Color=genusfarg("ThisItem.Genus"),
-            OnChange="Patch(colImport, LookUp(colImport, Nr = ThisItem.Nr), { Mal: Self.Value })",
+            OnChange="Patch(colImport, LookUp(colImport, Nr = ThisItem.Nr), { Mal: Self.Text })",
             **pos(4, 4, bred, 40),
         ),
         inmatning(
             "txtRadSv",
             varde="ThisItem.Svenska",
-            OnChange="Patch(colImport, LookUp(colImport, Nr = ThisItem.Nr), { Svenska: Self.Value })",
+            OnChange="Patch(colImport, LookUp(colImport, Nr = ThisItem.Nr), { Svenska: Self.Text })",
             **pos(f"8 + {bred}", 4, bred, 40),
         ),
         genusknapp(
@@ -555,13 +555,13 @@ def skarm_glosor():
             "txtBefMal",
             varde="ThisItem.Title",
             Color=genusfarg("ThisItem.Genus"),
-            OnChange="Patch(Glosor, ThisItem, { Title: Trim(Self.Value) })",
+            OnChange="Patch(Glosor, ThisItem, { Title: Trim(Self.Text) })",
             **pos(4, 4, bred, 40),
         ),
         inmatning(
             "txtBefSv",
             varde="ThisItem.Svenska",
-            OnChange="Patch(Glosor, ThisItem, { Svenska: Trim(Self.Value) })",
+            OnChange="Patch(Glosor, ThisItem, { Svenska: Trim(Self.Text) })",
             **pos(f"8 + {bred}", 4, bred, 40),
         ),
         genusknapp(
@@ -762,8 +762,8 @@ SPARA_LISTA = """If(
             Gloslistor,
             Defaults(Gloslistor),
             {
-                Title: Trim(txtListNamn.Value),
-                Beskrivning: txtListBeskr.Value,
+                Title: Trim(txtListNamn.Text),
+                Beskrivning: txtListBeskr.Text,
                 Sprak: First(colValda).Sprak,
                 LarareNamn: User().FullName,
                 LarareEpost: User().Email,
@@ -778,8 +778,8 @@ SPARA_LISTA = """If(
             Gloslistor,
             LookUp(Gloslistor, ID = varRedigeraLista.ID),
             {
-                Title: Trim(txtListNamn.Value),
-                Beskrivning: txtListBeskr.Value,
+                Title: Trim(txtListNamn.Text),
+                Beskrivning: txtListBeskr.Text,
                 Sprak: First(colValda).Sprak,
                 GlosaIDs: Concat(colValda, Text(ID), ";")
             }
@@ -935,7 +935,7 @@ def skarm_ny_lista():
                 'If(IsBlank(varRedigeraLista), "Spara gloslista", "Spara ändringar")',
                 SPARA_LISTA,
                 Height=48,
-                DisplayMode="If(CountRows(colValda) > 0 && !IsBlank(Trim(txtListNamn.Value)), DisplayMode.Edit, DisplayMode.Disabled)",
+                DisplayMode="If(CountRows(colValda) > 0 && !IsBlank(Trim(txtListNamn.Text)), DisplayMode.Edit, DisplayMode.Disabled)",
             ),
             rad(
                 "conNyLLank",

@@ -108,7 +108,7 @@ Screens:
                               Items: =Sort(glosor_bocker, Title)
                               ItemDisplayText: =ThisItem.Title
                               SelectMultiple: =false
-                              Placeholder: ="Välj bok – tomt = fristående glosor"
+                              InputTextPlaceholder: ="Välj bok – tomt = fristående glosor"
                               Height: =40
                               DefaultSelectedItems: =Filter(glosor_bocker, ID = varBokID)
                               OnChange: |-
@@ -128,7 +128,7 @@ Screens:
                               - txtNyBok:
                                   Control: ModernTextInput@1.1.2
                                   Properties:
-                                    Value: =""
+                                    Default: =""
                                     Placeholder: ="Ny bok…"
                                     Height: =40
                                     FillPortions: =2
@@ -138,7 +138,7 @@ Screens:
                                     Items: =Sprakval
                                     ItemDisplayText: =ThisItem.Namn
                                     SelectMultiple: =false
-                                    Placeholder: ="Språk"
+                                    InputTextPlaceholder: ="Språk"
                                     Height: =40
                                     FillPortions: =1
                                     LayoutMinWidth: =110
@@ -148,10 +148,10 @@ Screens:
                                     Text: ="Skapa bok"
                                     OnSelect: |-
                                       =If(
-                                          !IsBlank(Trim(txtNyBok.Value)) && !IsBlank(cmbNyBokSprak.Selected.Kod),
+                                          !IsBlank(Trim(txtNyBok.Text)) && !IsBlank(cmbNyBokSprak.Selected.Kod),
                                           Set(
                                               varBokID,
-                                              Patch(glosor_bocker, Defaults(glosor_bocker), { Title: Trim(txtNyBok.Value), Sprak: cmbNyBokSprak.Selected.Kod }).ID
+                                              Patch(glosor_bocker, Defaults(glosor_bocker), { Title: Trim(txtNyBok.Text), Sprak: cmbNyBokSprak.Selected.Kod }).ID
                                           );
                                           Set(varKapitelID, 0);
                                           Reset(txtNyBok);
@@ -187,7 +187,7 @@ Screens:
                               Items: =Sort(Filter(glosor_kapitel, BokID = Coalesce(cmbBok.Selected.ID, -1)), Ordning)
                               ItemDisplayText: =ThisItem.Title
                               SelectMultiple: =false
-                              Placeholder: ="Välj kapitel"
+                              InputTextPlaceholder: ="Välj kapitel"
                               Height: =40
                               DefaultSelectedItems: =Filter(glosor_kapitel, ID = varKapitelID)
                               DisplayMode: =If(IsBlank(cmbBok.Selected.ID), DisplayMode.Disabled, DisplayMode.Edit)
@@ -205,7 +205,7 @@ Screens:
                               - txtNyttKapitel:
                                   Control: ModernTextInput@1.1.2
                                   Properties:
-                                    Value: =""
+                                    Default: =""
                                     Placeholder: ="Nytt kapitel…"
                                     Height: =40
                                     FillPortions: =1
@@ -216,14 +216,14 @@ Screens:
                                     Text: ="Skapa kapitel"
                                     OnSelect: |-
                                       =If(
-                                          !IsBlank(Trim(txtNyttKapitel.Value)) && !IsBlank(cmbBok.Selected.ID),
+                                          !IsBlank(Trim(txtNyttKapitel.Text)) && !IsBlank(cmbBok.Selected.ID),
                                           Set(
                                               varKapitelID,
                                               Patch(
                                                   glosor_kapitel,
                                                   Defaults(glosor_kapitel),
                                                   {
-                                                      Title: Trim(txtNyttKapitel.Value),
+                                                      Title: Trim(txtNyttKapitel.Text),
                                                       BokID: cmbBok.Selected.ID,
                                                       Ordning: Coalesce(
                                                           First(Sort(Filter(glosor_kapitel, BokID = cmbBok.Selected.ID), Ordning, SortOrder.Descending)).Ordning,
@@ -256,7 +256,7 @@ Screens:
                               Items: =Sprakval
                               ItemDisplayText: =ThisItem.Namn
                               SelectMultiple: =false
-                              Placeholder: ="Välj språk"
+                              InputTextPlaceholder: ="Välj språk"
                               Height: =40
                               Visible: =IsBlank(cmbBok.Selected.ID)
                         - conTips:
@@ -327,7 +327,7 @@ Screens:
                         - txtImport:
                             Control: ModernTextInput@1.1.2
                             Properties:
-                              Value: =""
+                              Default: =""
                               Placeholder: ="house ⇥ hus (tabb, ; eller - mellan orden)"
                               Height: =100
                               Type: =TextInputType.Multiline
@@ -350,7 +350,7 @@ Screens:
                                       =With(
                                           {
                                               rader: Filter(
-                                                  Split(Substitute(txtImport.Value, Char(13), ""), Char(10)),
+                                                  Split(Substitute(txtImport.Text, Char(13), ""), Char(10)),
                                                   !IsBlank(Trim(Value))
                                               ),
                                               start: Coalesce(Max(colImport, Nr), 0),
@@ -431,14 +431,14 @@ Screens:
                               - txtMal:
                                   Control: ModernTextInput@1.1.2
                                   Properties:
-                                    Value: =""
+                                    Default: =""
                                     Placeholder: ="Målspråk, t.ex. la casa"
                                     Height: =40
                                     FillPortions: =1
                               - txtSv:
                                   Control: ModernTextInput@1.1.2
                                   Properties:
-                                    Value: =""
+                                    Default: =""
                                     Placeholder: ="Svenska, t.ex. huset"
                                     Height: =40
                                     FillPortions: =1
@@ -448,14 +448,14 @@ Screens:
                                     Text: ="+ Lägg till"
                                     OnSelect: |-
                                       =If(
-                                          !IsBlank(Trim(txtMal.Value)),
+                                          !IsBlank(Trim(txtMal.Text)),
                                           Collect(
                                               colImport,
                                               {
                                                   Nr: Coalesce(Max(colImport, Nr), 0) + 1,
-                                                  Mal: Trim(txtMal.Value),
-                                                  Svenska: Trim(txtSv.Value),
-                                                  Genus: Coalesce(LookUp(GenusArtiklar, Sprak = txtGlosSprak.Text && Artikel = Lower(First(Split(Trim(txtMal.Value), " ")).Value), Genus), "")
+                                                  Mal: Trim(txtMal.Text),
+                                                  Svenska: Trim(txtSv.Text),
+                                                  Genus: Coalesce(LookUp(GenusArtiklar, Sprak = txtGlosSprak.Text && Artikel = Lower(First(Split(Trim(txtMal.Text), " ")).Value), Genus), "")
                                               }
                                           );
                                           Reset(txtMal);
@@ -517,23 +517,23 @@ Screens:
                               - txtRadMal:
                                   Control: ModernTextInput@1.1.2
                                   Properties:
-                                    Value: =ThisItem.Mal
+                                    Default: =ThisItem.Mal
                                     Placeholder: =""
                                     Height: =40
                                     Color: =Switch(ThisItem.Genus, "f", Tema.GenusF, "m", Tema.GenusM, "n", Tema.GenusN, Tema.Brodtext)
                                     OnChange: |-
-                                      =Patch(colImport, LookUp(colImport, Nr = ThisItem.Nr), { Mal: Self.Value })
+                                      =Patch(colImport, LookUp(colImport, Nr = ThisItem.Nr), { Mal: Self.Text })
                                     X: =4
                                     Y: =4
                                     Width: =(Parent.TemplateWidth - 140) / 2
                               - txtRadSv:
                                   Control: ModernTextInput@1.1.2
                                   Properties:
-                                    Value: =ThisItem.Svenska
+                                    Default: =ThisItem.Svenska
                                     Placeholder: =""
                                     Height: =40
                                     OnChange: |-
-                                      =Patch(colImport, LookUp(colImport, Nr = ThisItem.Nr), { Svenska: Self.Value })
+                                      =Patch(colImport, LookUp(colImport, Nr = ThisItem.Nr), { Svenska: Self.Text })
                                     X: =8 + (Parent.TemplateWidth - 140) / 2
                                     Y: =4
                                     Width: =(Parent.TemplateWidth - 140) / 2
@@ -675,23 +675,23 @@ Screens:
                               - txtBefMal:
                                   Control: ModernTextInput@1.1.2
                                   Properties:
-                                    Value: =ThisItem.Title
+                                    Default: =ThisItem.Title
                                     Placeholder: =""
                                     Height: =40
                                     Color: =Switch(ThisItem.Genus, "f", Tema.GenusF, "m", Tema.GenusM, "n", Tema.GenusN, Tema.Brodtext)
                                     OnChange: |-
-                                      =Patch(glosor_glosor, ThisItem, { Title: Trim(Self.Value) })
+                                      =Patch(glosor_glosor, ThisItem, { Title: Trim(Self.Text) })
                                     X: =4
                                     Y: =4
                                     Width: =(Parent.TemplateWidth - 140) / 2
                               - txtBefSv:
                                   Control: ModernTextInput@1.1.2
                                   Properties:
-                                    Value: =ThisItem.Svenska
+                                    Default: =ThisItem.Svenska
                                     Placeholder: =""
                                     Height: =40
                                     OnChange: |-
-                                      =Patch(glosor_glosor, ThisItem, { Svenska: Trim(Self.Value) })
+                                      =Patch(glosor_glosor, ThisItem, { Svenska: Trim(Self.Text) })
                                     X: =8 + (Parent.TemplateWidth - 140) / 2
                                     Y: =4
                                     Width: =(Parent.TemplateWidth - 140) / 2

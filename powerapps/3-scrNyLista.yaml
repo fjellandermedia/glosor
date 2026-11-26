@@ -115,7 +115,7 @@ Screens:
                                     Items: =Sort(glosor_bocker, Title)
                                     ItemDisplayText: =ThisItem.Title
                                     SelectMultiple: =false
-                                    Placeholder: ="Bok"
+                                    InputTextPlaceholder: ="Bok"
                                     Height: =40
                                     FillPortions: =1
                                     OnChange: =Reset(cmbLKapitel)
@@ -126,7 +126,7 @@ Screens:
                                     Items: =Sort(Filter(glosor_kapitel, BokID = Coalesce(cmbLBok.Selected.ID, -1)), Ordning)
                                     ItemDisplayText: =ThisItem.Title
                                     SelectMultiple: =false
-                                    Placeholder: ="Kapitel"
+                                    InputTextPlaceholder: ="Kapitel"
                                     Height: =40
                                     FillPortions: =1
                                     DisplayMode: =If(chkFristaende.Checked, DisplayMode.Disabled, DisplayMode.Edit)
@@ -153,7 +153,7 @@ Screens:
                                     Items: =Sprakval
                                     ItemDisplayText: =ThisItem.Namn
                                     SelectMultiple: =false
-                                    Placeholder: ="Språk"
+                                    InputTextPlaceholder: ="Språk"
                                     Height: =40
                                     FillPortions: =1
                                     Visible: =chkFristaende.Checked
@@ -271,7 +271,7 @@ Screens:
                                     Items: =Sort(glosor_gloslistor, Title)
                                     ItemDisplayText: =ThisItem.Title
                                     SelectMultiple: =true
-                                    Placeholder: ="Välj en eller flera listor"
+                                    InputTextPlaceholder: ="Välj en eller flera listor"
                                     Height: =40
                                     FillPortions: =1
                               - btnLaggTillListor:
@@ -338,13 +338,13 @@ Screens:
                         - txtListNamn:
                             Control: ModernTextInput@1.1.2
                             Properties:
-                              Value: =If(IsBlank(varRedigeraLista), varMallNamn, varRedigeraLista.Title)
+                              Default: =If(IsBlank(varRedigeraLista), varMallNamn, varRedigeraLista.Title)
                               Placeholder: ="Namn, t.ex. Kapitel 3 glosor"
                               Height: =40
                         - txtListBeskr:
                             Control: ModernTextInput@1.1.2
                             Properties:
-                              Value: =If(IsBlank(varRedigeraLista), "", varRedigeraLista.Beskrivning)
+                              Default: =If(IsBlank(varRedigeraLista), "", varRedigeraLista.Beskrivning)
                               Placeholder: ="Beskrivning (valfri), t.ex. Prov fredag v. 12"
                               Height: =40
                         - conNyLValdaRubrik:
@@ -442,8 +442,8 @@ Screens:
                                             glosor_gloslistor,
                                             Defaults(glosor_gloslistor),
                                             {
-                                                Title: Trim(txtListNamn.Value),
-                                                Beskrivning: txtListBeskr.Value,
+                                                Title: Trim(txtListNamn.Text),
+                                                Beskrivning: txtListBeskr.Text,
                                                 Sprak: First(colValda).Sprak,
                                                 LarareNamn: User().FullName,
                                                 LarareEpost: User().Email,
@@ -458,8 +458,8 @@ Screens:
                                             glosor_gloslistor,
                                             LookUp(glosor_gloslistor, ID = varRedigeraLista.ID),
                                             {
-                                                Title: Trim(txtListNamn.Value),
-                                                Beskrivning: txtListBeskr.Value,
+                                                Title: Trim(txtListNamn.Text),
+                                                Beskrivning: txtListBeskr.Text,
                                                 Sprak: First(colValda).Sprak,
                                                 GlosaIDs: Concat(colValda, Text(ID), ";")
                                             }
@@ -475,7 +475,7 @@ Screens:
                               Appearance: =ButtonAppearance.Primary
                               BasePaletteColor: =Tema.Primar
                               Height: =48
-                              DisplayMode: =If(CountRows(colValda) > 0 && !IsBlank(Trim(txtListNamn.Value)), DisplayMode.Edit, DisplayMode.Disabled)
+                              DisplayMode: =If(CountRows(colValda) > 0 && !IsBlank(Trim(txtListNamn.Text)), DisplayMode.Edit, DisplayMode.Disabled)
                         - conNyLLank:
                             Control: GroupContainer@1.5.0
                             Variant: AutoLayout
