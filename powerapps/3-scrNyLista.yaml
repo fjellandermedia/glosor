@@ -119,7 +119,7 @@ Screens:
                                     Height: =40
                                     FillPortions: =1
                                     OnChange: =Reset(cmbLKapitel)
-                                    DisplayMode: =If(chkFristaende.Checked, DisplayMode.Disabled, DisplayMode.Edit)
+                                    DisplayMode: =If(chkFristaende.Value, DisplayMode.Disabled, DisplayMode.Edit)
                               - cmbLKapitel:
                                   Control: ModernCombobox@1.1.2
                                   Properties:
@@ -129,7 +129,7 @@ Screens:
                                     InputTextPlaceholder: ="Kapitel"
                                     Height: =40
                                     FillPortions: =1
-                                    DisplayMode: =If(chkFristaende.Checked, DisplayMode.Disabled, DisplayMode.Edit)
+                                    DisplayMode: =If(chkFristaende.Value, DisplayMode.Disabled, DisplayMode.Edit)
                         - conNyLFristaende:
                             Control: GroupContainer@1.5.0
                             Variant: AutoLayout
@@ -156,7 +156,7 @@ Screens:
                                     InputTextPlaceholder: ="Språk"
                                     Height: =40
                                     FillPortions: =1
-                                    Visible: =chkFristaende.Checked
+                                    Visible: =chkFristaende.Value
                         - conNyLMarkera:
                             Control: GroupContainer@1.5.0
                             Variant: AutoLayout
@@ -193,7 +193,7 @@ Screens:
                             Properties:
                               Items: |-
                                 =If(
-                                    chkFristaende.Checked,
+                                    chkFristaende.Value,
                                     Filter(glosor_glosor, BokID = 0, Sprak = cmbLSprak.Selected.Kod),
                                     Filter(glosor_glosor, KapitelID = Coalesce(cmbLKapitel.Selected.ID, -1))
                                 )
@@ -210,7 +210,7 @@ Screens:
                                   Properties:
                                     Label: =""
                                     Height: =36
-                                    Checked: =!IsBlank(LookUp(colValda, ID = ThisItem.ID))
+                                    Default: =!IsBlank(LookUp(colValda, ID = ThisItem.ID))
                                     OnCheck: |-
                                       =If(IsBlank(LookUp(colValda, ID = ThisItem.ID)), Collect(colValda, { ID: ThisItem.ID, Title: ThisItem.Title, Svenska: ThisItem.Svenska, Genus: ThisItem.Genus, Sprak: ThisItem.Sprak }))
                                     OnUncheck: =RemoveIf(colValda, ID = ThisItem.ID)

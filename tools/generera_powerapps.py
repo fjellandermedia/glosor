@@ -734,7 +734,7 @@ def vald_post(x):
 
 
 KALLA = """If(
-    chkFristaende.Checked,
+    chkFristaende.Value,
     Filter(Glosor, BokID = 0, Sprak = cmbLSprak.Selected.Kod),
     Filter(Glosor, KapitelID = Coalesce(cmbLKapitel.Selected.ID, -1))
 )"""
@@ -800,7 +800,7 @@ def skarm_ny_lista():
         kryss(
             "chkGlosa",
             '""',
-            Checked="!IsBlank(LookUp(colValda, ID = ThisItem.ID))",
+            Default="!IsBlank(LookUp(colValda, ID = ThisItem.ID))",
             OnCheck=f"If(IsBlank(LookUp(colValda, ID = ThisItem.ID)), Collect(colValda, {vald_post('ThisItem')}))",
             OnUncheck="RemoveIf(colValda, ID = ThisItem.ID)",
             **pos(8, 6, 40, 36),
@@ -828,7 +828,7 @@ def skarm_ny_lista():
         avdelare("rectVLinje"),
     ]
     lank = 'WebbAdress & "?lista=" & varSparadLista.ID'
-    fristaende = "chkFristaende.Checked"
+    fristaende = "chkFristaende.Value"
     ej_fristaende = f"If({fristaende}, DisplayMode.Disabled, DisplayMode.Edit)"
 
     vanster = kort(
@@ -1074,7 +1074,7 @@ def skarm_listor():
                 [
                     galleri(
                         "galListor",
-                        "Sort(\n    If(chkAllaListor.Checked, Gloslistor, Filter(Gloslistor, LarareEpost = User().Email)),\n"
+                        "Sort(\n    If(chkAllaListor.Value, Gloslistor, Filter(Gloslistor, LarareEpost = User().Email)),\n"
                         "    ID,\n    SortOrder.Descending\n)",
                         92,
                         rad_,

@@ -122,7 +122,7 @@ Screens:
                             Properties:
                               Items: |-
                                 =Sort(
-                                    If(chkAllaListor.Checked, glosor_gloslistor, Filter(glosor_gloslistor, LarareEpost = User().Email)),
+                                    If(chkAllaListor.Value, glosor_gloslistor, Filter(glosor_gloslistor, LarareEpost = User().Email)),
                                     ID,
                                     SortOrder.Descending
                                 )
