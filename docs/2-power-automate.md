@@ -66,7 +66,8 @@ Byt namn på åtgärderna **exakt** som i fetstilen nedan (klicka på åtgärden
 1. **SharePoint → Hämta objekt**, namn: **Hamta_glosor**
    - Lista: `glosor_glosor`
    - Högsta antal: `5000`
-   - **Inställningar → Sidnumrering (Pagination): På**, tröskel `20000`. Då fungerar det även när ni har fler än 5 000 glosor.
+   - **Inställningar → Sidnumrering (Pagination): På**, tröskel `5000` (högsta värdet med en vanlig licens).
+     Flödet hämtar då högst 5 000 glosor. Blir det fler, lägg filterfrågan `Sprak eq 'es'` eller liknande, eller dela upp per språk.
 2. **Dataåtgärd → Filtrera matris** (*Filter array*), namn: **Filtrera_glosor**
    - Från: `body('Hamta_glosor')?['value']`
    - Villkor, i avancerat läge: `@contains(triggerBody()?['ids'], item()?['ID'])`
