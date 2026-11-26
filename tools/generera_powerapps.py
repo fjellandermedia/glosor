@@ -144,7 +144,7 @@ def rad(namn, children, hojd=40, **p):
 
 
 def text(namn, txt, hojd=28, storlek=12, fet=False, farg="Tema.Brodtext", **p):
-    props = {"Text": txt, "Size": storlek, "FontColor": farg, "Height": hojd}
+    props = {"Text": txt, "Size": storlek, "Color": farg, "Height": hojd}
     if fet:
         props["FontWeight"] = "FontWeight.Semibold" if fet is True else fet
     props.update(p)
@@ -527,7 +527,7 @@ def skarm_glosor():
         inmatning(
             "txtRadMal",
             varde="ThisItem.Mal",
-            FontColor=genusfarg("ThisItem.Genus"),
+            Color=genusfarg("ThisItem.Genus"),
             OnChange="Patch(colImport, LookUp(colImport, Nr = ThisItem.Nr), { Mal: Self.Value })",
             **pos(4, 4, bred, 40),
         ),
@@ -554,7 +554,7 @@ def skarm_glosor():
         inmatning(
             "txtBefMal",
             varde="ThisItem.Title",
-            FontColor=genusfarg("ThisItem.Genus"),
+            Color=genusfarg("ThisItem.Genus"),
             OnChange="Patch(Glosor, ThisItem, { Title: Trim(Self.Value) })",
             **pos(4, 4, bred, 40),
         ),

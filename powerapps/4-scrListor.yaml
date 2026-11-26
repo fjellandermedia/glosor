@@ -36,7 +36,7 @@ Screens:
                       Properties:
                         Text: ="Gloslistor"
                         Size: =20
-                        FontColor: =Tema.TextPaPrimar
+                        Color: =Tema.TextPaPrimar
                         Height: =36
                         FontWeight: =FontWeight.Bold
                         FillPortions: =1
@@ -139,7 +139,7 @@ Screens:
                                   Properties:
                                     Text: =ThisItem.Title
                                     Size: =14
-                                    FontColor: =If(ThisItem.Aktiv, Tema.Brodtext, Tema.TextDampad)
+                                    Color: =If(ThisItem.Aktiv, Tema.Brodtext, Tema.TextDampad)
                                     Height: =30
                                     FontWeight: =FontWeight.Bold
                                     X: =16
@@ -150,7 +150,7 @@ Screens:
                                   Properties:
                                     Text: =ThisItem.LarareNamn & " · " & CountRows(Filter(Split(ThisItem.GlosaIDs, ";"), !IsBlank(Trim(Value)))) & " glosor · " & Coalesce(LookUp(Sprakval, Kod = ThisItem.Sprak).Namn, ThisItem.Sprak) & If(ThisItem.Aktiv, "", " · DOLD för eleverna") & If(IsBlank(ThisItem.Beskrivning), "", " · " & ThisItem.Beskrivning)
                                     Size: =11
-                                    FontColor: =Tema.TextDampad
+                                    Color: =Tema.TextDampad
                                     Height: =24
                                     X: =16
                                     Y: =40
@@ -160,7 +160,7 @@ Screens:
                                   Properties:
                                     Text: =WebbAdress & "?lista=" & ThisItem.ID
                                     Size: =10
-                                    FontColor: =Tema.Primar
+                                    Color: =Tema.Primar
                                     Height: =22
                                     X: =16
                                     Y: =64

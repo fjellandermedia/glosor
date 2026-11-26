@@ -30,7 +30,7 @@
                 Properties:
                   Text: =If(IsBlank(varRedigeraLista), "Skapa gloslista", "Redigera gloslista")
                   Size: =20
-                  FontColor: =Tema.TextPaPrimar
+                  Color: =Tema.TextPaPrimar
                   Height: =36
                   FontWeight: =FontWeight.Bold
                   FillPortions: =1
@@ -86,7 +86,7 @@
                       Properties:
                         Text: ="1. Välj glosor"
                         Size: =14
-                        FontColor: =Tema.Brodtext
+                        Color: =Tema.Brodtext
                         Height: =30
                         FontWeight: =FontWeight.Semibold
                   - conNyLBokKapitel:
@@ -213,7 +213,7 @@
                             Properties:
                               Text: =ThisItem.Title
                               Size: =12
-                              FontColor: =Switch(ThisItem.Genus, "f", Tema.GenusF, "m", Tema.GenusM, "n", Tema.GenusN, Tema.Brodtext)
+                              Color: =Switch(ThisItem.Genus, "f", Tema.GenusF, "m", Tema.GenusM, "n", Tema.GenusN, Tema.Brodtext)
                               Height: =28
                               FontWeight: =FontWeight.Semibold
                               X: =52
@@ -224,7 +224,7 @@
                             Properties:
                               Text: =ThisItem.Svenska
                               Size: =12
-                              FontColor: =Tema.Brodtext
+                              Color: =Tema.Brodtext
                               Height: =28
                               X: =56 + (Parent.TemplateWidth - 60) / 2
                               Y: =10
@@ -242,7 +242,7 @@
                       Properties:
                         Text: ="…eller slå ihop befintliga gloslistor"
                         Size: =14
-                        FontColor: =Tema.Brodtext
+                        Color: =Tema.Brodtext
                         Height: =30
                         FontWeight: =FontWeight.Semibold
                   - conNyLListor:
@@ -293,7 +293,7 @@
                       Properties:
                         Text: ="Glosorna återanvänds – inget dupliceras. Samma glosa läggs bara till en gång."
                         Size: =10
-                        FontColor: =Tema.TextDampad
+                        Color: =Tema.TextDampad
                         Height: =22
             - conNyLLista:
                 Control: GroupContainer@1.5.0
@@ -323,7 +323,7 @@
                       Properties:
                         Text: ="2. Din gloslista"
                         Size: =14
-                        FontColor: =Tema.Brodtext
+                        Color: =Tema.Brodtext
                         Height: =30
                         FontWeight: =FontWeight.Semibold
                   - txtListNamn:
@@ -354,7 +354,7 @@
                             Properties:
                               Text: ="Valda glosor (" & CountRows(colValda) & ")"
                               Size: =14
-                              FontColor: =Tema.Brodtext
+                              Color: =Tema.Brodtext
                               Height: =30
                               FontWeight: =FontWeight.Semibold
                               FillPortions: =1
@@ -385,7 +385,7 @@
                             Properties:
                               Text: =ThisItem.Title
                               Size: =12
-                              FontColor: =Switch(ThisItem.Genus, "f", Tema.GenusF, "m", Tema.GenusM, "n", Tema.GenusN, Tema.Brodtext)
+                              Color: =Switch(ThisItem.Genus, "f", Tema.GenusF, "m", Tema.GenusM, "n", Tema.GenusN, Tema.Brodtext)
                               Height: =28
                               FontWeight: =FontWeight.Semibold
                               X: =8
@@ -396,7 +396,7 @@
                             Properties:
                               Text: =ThisItem.Svenska
                               Size: =12
-                              FontColor: =Tema.Brodtext
+                              Color: =Tema.Brodtext
                               Height: =28
                               X: =12 + (Parent.TemplateWidth - 60) / 2
                               Y: =8
@@ -485,7 +485,7 @@
                               Text: |-
                                 ="Länk till eleverna: " & WebbAdress & "?lista=" & varSparadLista.ID
                               Size: =12
-                              FontColor: =Tema.Primar
+                              Color: =Tema.Primar
                               Height: =40
                               FillPortions: =1
                         - btnKopieraLank:

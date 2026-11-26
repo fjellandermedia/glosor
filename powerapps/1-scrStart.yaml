@@ -35,7 +35,7 @@ Screens:
                       Properties:
                         Text: ="Glosor – lärarverktyg"
                         Size: =20
-                        FontColor: =Tema.TextPaPrimar
+                        Color: =Tema.TextPaPrimar
                         Height: =36
                         FontWeight: =FontWeight.Bold
                         FillPortions: =1
@@ -59,7 +59,7 @@ Screens:
                       Properties:
                         Text: ="Hej " & User().FullName & "! Vad vill du göra?"
                         Size: =16
-                        FontColor: =Tema.Brodtext
+                        Color: =Tema.Brodtext
                         Height: =40
                   - conStartKort:
                       Control: GroupContainer@1.5.0
@@ -100,7 +100,7 @@ Screens:
                                   Properties:
                                     Text: ="Lägg in glosor"
                                     Size: =18
-                                    FontColor: =Tema.Brodtext
+                                    Color: =Tema.Brodtext
                                     Height: =36
                                     FontWeight: =FontWeight.Bold
                               - txtStartGlosorText:
@@ -108,7 +108,7 @@ Screens:
                                   Properties:
                                     Text: ="Skriv in eller klistra in glosor till en bok och ett kapitel. Flera lärare kan fylla på samma kapitel."
                                     Size: =12
-                                    FontColor: =Tema.TextDampad
+                                    Color: =Tema.TextDampad
                                     Height: =28
                                     FillPortions: =1
                               - btnStartGlosor:
@@ -149,7 +149,7 @@ Screens:
                                   Properties:
                                     Text: ="Skapa gloslista"
                                     Size: =18
-                                    FontColor: =Tema.Brodtext
+                                    Color: =Tema.Brodtext
                                     Height: =36
                                     FontWeight: =FontWeight.Bold
                               - txtStartNyListaText:
@@ -157,7 +157,7 @@ Screens:
                                   Properties:
                                     Text: ="Välj glosor ur böcker och kapitel, eller slå ihop befintliga listor, och dela listan med eleverna."
                                     Size: =12
-                                    FontColor: =Tema.TextDampad
+                                    Color: =Tema.TextDampad
                                     Height: =28
                                     FillPortions: =1
                               - btnStartNyLista:
@@ -202,7 +202,7 @@ Screens:
                                   Properties:
                                     Text: ="Gloslistor"
                                     Size: =18
-                                    FontColor: =Tema.Brodtext
+                                    Color: =Tema.Brodtext
                                     Height: =36
                                     FontWeight: =FontWeight.Bold
                               - txtStartListorText:
@@ -210,7 +210,7 @@ Screens:
                                   Properties:
                                     Text: ="Se dina och andras gloslistor, kopiera länkar till eleverna, redigera eller dölj listor."
                                     Size: =12
-                                    FontColor: =Tema.TextDampad
+                                    Color: =Tema.TextDampad
                                     Height: =28
                                     FillPortions: =1
                               - btnStartListor:
@@ -229,5 +229,5 @@ Screens:
                         Text: |-
                           ="Elevernas övningssida: " & WebbAdress
                         Size: =10
-                        FontColor: =Tema.TextDampad
+                        Color: =Tema.TextDampad
                         Height: =22

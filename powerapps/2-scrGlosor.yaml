@@ -35,7 +35,7 @@ Screens:
                       Properties:
                         Text: ="Lägg in glosor"
                         Size: =20
-                        FontColor: =Tema.TextPaPrimar
+                        Color: =Tema.TextPaPrimar
                         Height: =36
                         FontWeight: =FontWeight.Bold
                         FillPortions: =1
@@ -91,7 +91,7 @@ Screens:
                             Properties:
                               Text: =If(IsBlank(cmbBok.Selected.ID), cmbSprak.Selected.Kod, cmbBok.Selected.Sprak)
                               Size: =12
-                              FontColor: =Tema.Brodtext
+                              Color: =Tema.Brodtext
                               Height: =28
                               Visible: =false
                         - txtBok:
@@ -99,7 +99,7 @@ Screens:
                             Properties:
                               Text: ="1. Bok"
                               Size: =14
-                              FontColor: =Tema.Brodtext
+                              Color: =Tema.Brodtext
                               Height: =30
                               FontWeight: =FontWeight.Semibold
                         - cmbBok:
@@ -170,7 +170,7 @@ Screens:
                               Text: |-
                                 ="Språk: " & Coalesce(LookUp(Sprakval, Kod = cmbBok.Selected.Sprak).Namn, cmbBok.Selected.Sprak)
                               Size: =10
-                              FontColor: =Tema.TextDampad
+                              Color: =Tema.TextDampad
                               Height: =22
                               Visible: =!IsBlank(cmbBok.Selected.ID)
                         - txtKapitel:
@@ -178,7 +178,7 @@ Screens:
                             Properties:
                               Text: ="2. Kapitel"
                               Size: =14
-                              FontColor: =Tema.Brodtext
+                              Color: =Tema.Brodtext
                               Height: =30
                               FontWeight: =FontWeight.Semibold
                         - cmbKapitel:
@@ -246,7 +246,7 @@ Screens:
                             Properties:
                               Text: ="Språk för fristående glosor"
                               Size: =14
-                              FontColor: =Tema.Brodtext
+                              Color: =Tema.Brodtext
                               Height: =30
                               FontWeight: =FontWeight.Semibold
                               Visible: =IsBlank(cmbBok.Selected.ID)
@@ -290,7 +290,7 @@ Screens:
                                       • Färgmarkera genus med knappen efter ordet: röd = femininum, blå = maskulinum, grön = neutrum. Appen föreslår färg utifrån artikeln.
                                       • Flera godkända svar: skriv / mellan (la casa / el hogar). Valfri del inom parentes: (se) llamar."
                                     Size: =11
-                                    FontColor: =Tema.Brodtext
+                                    Color: =Tema.Brodtext
                                     Height: =28
                                     FillPortions: =1
                   - conGlosImport:
@@ -321,7 +321,7 @@ Screens:
                             Properties:
                               Text: ="3. Klistra in glosor – en per rad, tabb mellan orden"
                               Size: =14
-                              FontColor: =Tema.Brodtext
+                              Color: =Tema.Brodtext
                               Height: =30
                               FontWeight: =FontWeight.Semibold
                         - txtImport:
@@ -482,7 +482,7 @@ Screens:
                                   Properties:
                                     Text: ="Målspråk"
                                     Size: =10
-                                    FontColor: =Tema.TextDampad
+                                    Color: =Tema.TextDampad
                                     Height: =22
                                     FillPortions: =1
                               - txtImpRubSv:
@@ -490,7 +490,7 @@ Screens:
                                   Properties:
                                     Text: ="Svenska"
                                     Size: =10
-                                    FontColor: =Tema.TextDampad
+                                    Color: =Tema.TextDampad
                                     Height: =22
                                     FillPortions: =1
                               - txtImpRubGenus:
@@ -498,7 +498,7 @@ Screens:
                                   Properties:
                                     Text: ="Genus"
                                     Size: =10
-                                    FontColor: =Tema.TextDampad
+                                    Color: =Tema.TextDampad
                                     Height: =22
                                     Width: =120
                         - galImport:
@@ -520,7 +520,7 @@ Screens:
                                     Value: =ThisItem.Mal
                                     Placeholder: =""
                                     Height: =40
-                                    FontColor: =Switch(ThisItem.Genus, "f", Tema.GenusF, "m", Tema.GenusM, "n", Tema.GenusN, Tema.Brodtext)
+                                    Color: =Switch(ThisItem.Genus, "f", Tema.GenusF, "m", Tema.GenusM, "n", Tema.GenusN, Tema.Brodtext)
                                     OnChange: |-
                                       =Patch(colImport, LookUp(colImport, Nr = ThisItem.Nr), { Mal: Self.Value })
                                     X: =4
@@ -573,7 +573,7 @@ Screens:
                             Properties:
                               Text: =If(CountRows(Filter(colImport, IsBlank(Trim(Svenska)) || IsBlank(Trim(Mal)))) > 0, "Någon rad saknar ord.", IsBlank(txtGlosSprak.Text), "Välj bok eller språk först.", !IsBlank(cmbBok.Selected.ID) && IsBlank(cmbKapitel.Selected.ID), "Välj kapitel först.", "")
                               Size: =10
-                              FontColor: =Tema.Fel
+                              Color: =Tema.Fel
                               Height: =22
                         - btnSparaGlosor:
                             Control: ModernButton@1.0.0
@@ -642,7 +642,7 @@ Screens:
                             Properties:
                               Text: ="Redan inlagda här (" & CountRows(galBefintliga.AllItems) & ")"
                               Size: =14
-                              FontColor: =Tema.Brodtext
+                              Color: =Tema.Brodtext
                               Height: =30
                               FontWeight: =FontWeight.Semibold
                         - txtBefintligaInfo:
@@ -650,7 +650,7 @@ Screens:
                             Properties:
                               Text: ="Alla lärare kan fylla på samma kapitel. Ändringar sparas direkt."
                               Size: =10
-                              FontColor: =Tema.TextDampad
+                              Color: =Tema.TextDampad
                               Height: =22
                         - galBefintliga:
                             Control: Gallery@2.15.0
@@ -678,7 +678,7 @@ Screens:
                                     Value: =ThisItem.Title
                                     Placeholder: =""
                                     Height: =40
-                                    FontColor: =Switch(ThisItem.Genus, "f", Tema.GenusF, "m", Tema.GenusM, "n", Tema.GenusN, Tema.Brodtext)
+                                    Color: =Switch(ThisItem.Genus, "f", Tema.GenusF, "m", Tema.GenusM, "n", Tema.GenusN, Tema.Brodtext)
                                     OnChange: |-
                                       =Patch(glosor_glosor, ThisItem, { Title: Trim(Self.Value) })
                                     X: =4
